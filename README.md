@@ -46,7 +46,7 @@ Included foundations:
 - Built-in add-on API, registry and lifecycle manager.
 - Linux XDG application discovery.
 - Persistent host-side action storage, explicit approval, confirmation before execution and bounded audit log.
-- PC Control Center for local application/action management, including command review before approval.\n- Desktop application launch returns immediately with a process ID instead of waiting for the GUI app to close.
+- PC Control Center for local application/action management and VDN2 device pairing/revocation, including command review before approval.\n- Desktop application launch returns immediately with a process ID instead of waiting for the GUI app to close.
 - Vita VPK identity and verification tooling, while retaining VMON1 compatibility.
 
 **Not included in Release 1:** VDN2 pairing, remote PC actions from Vita, catalog synchronization, file transfer/sync, terminal, remote display, Tailscale integration or multi-node control.
@@ -114,6 +114,7 @@ The capability report is deliberately conservative. Host-side pairing primitives
 - [Roadmap R1–R8](docs/ROADMAP.md)
 - [Host architecture](docs/ARCHITECTURE.md)
 - [VDN2 protocol and security baseline](docs/VDN2_PROTOCOL.md)
+- [VDN2 Pairing & Host Service](docs/VDN2_PAIRING_HOST_SERVICE.md)
 - [Linux installation and Debian packaging](docs/LINUX_INSTALL.md)
 - [Vita client preview and limitations](docs/VITA_CLIENT_PREVIEW.md)
 - [Add-on framework](docs/ADDON_SYSTEM.md)
