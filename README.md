@@ -25,6 +25,10 @@ This fork is evolving into Vita Desktop Node while preserving the original VMON1
 - **Secure terminal** means paired devices, per-device permissions and no implicit root shell.
 
 Design documents:
+- **Linux host port:** initial MX Linux/XFCE integration and Debian package instructions are in [Linux installation](docs/LINUX_INSTALL.md).
+- **Add-on architecture:** [modular add-on contract](docs/ADDON_SYSTEM.md).
+- **PSVita Direct Node:** [folder layout and synchronization behavior](docs/PSVITA_DIRECT_NODE_SYNC.md).
+- **Release policy:** [one tested feature per milestone release](docs/RELEASE_POLICY.md).
 - [VDN2 protocol and security baseline](docs/VDN2_PROTOCOL.md)
 - [Host architecture and implementation roadmap](docs/ARCHITECTURE.md)
 
