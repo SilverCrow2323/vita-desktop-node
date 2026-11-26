@@ -44,3 +44,17 @@ def test_timeout_and_extra_args_validation(tmp_path):
     m.approve("test.args")
     with pytest.raises(ActionError,match="timeout"): m.run("test.args",confirmed=True,timeout=999)
     with pytest.raises(ActionError,match="extra arguments"): m.run("test.args",confirmed=True,extra_args=["x"]*17)
+
+
+def test_catalog_refresh_preserves_approval_only_when_command_is_unchanged(tmp_path):
+    m=ActionManager(tmp_path)
+    def app(argv):
+        return SimpleNamespace(action_id="linux.desktop.abcdef1234567890",name="Editor",
+            categories=("Utility",),icon="editor",platform="linux",launch_argv=tuple(argv))
+    m.register_application(app([sys.executable,"--version"]))
+    m.approve("linux.desktop.abcdef1234567890")
+    m.register_application(app([sys.executable,"--version"]))
+    assert m.public_action("linux.desktop.abcdef1234567890")["enabled"] is True
+    m.register_application(app([sys.executable,"-c","print('changed')"]))
+    refreshed=m.public_action("linux.desktop.abcdef1234567890")
+    assert refreshed["approved"] is False and refreshed["enabled"] is False
