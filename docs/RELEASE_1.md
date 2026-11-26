@@ -1,7 +1,7 @@
 # Vita Desktop Node — Release 1
 
 **Release track:** R1 host foundation  
-**Current repository version:** 0.1.0-alpha.1  
+**Current repository version:** 0.1.0-alpha.2  
 **Release state:** implementation milestone; publication remains gated on CI and target-device validation.
 
 ## Purpose
@@ -77,6 +77,8 @@ The Vita client does not yet implement VDN2.
 These are subsequent roadmap items, not hidden or partially enabled Release 1 features.
 
 ## Build and verification
+
+The CI VPK artifact is published as `VitaDesktopNode-VPK-alpha.2` and contains the `.vpk`, a SHA-256 checksum file and the build verification report. The artifact is a CI build product, not a published GitHub Release.
 
 Run the host tests:
 
