@@ -2,7 +2,7 @@ from __future__ import annotations
 import json, sys
 from types import SimpleNamespace
 import pytest
-from server.vdn.action_manager import ActionError, ActionManager
+from vdn.action_manager import ActionError, ActionManager
 
 def test_approval_confirmation_and_execution(tmp_path):
     m=ActionManager(tmp_path)
