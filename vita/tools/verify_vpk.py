@@ -69,7 +69,7 @@ def verify_vpk(path: Path) -> dict[str, str]:
             "sce_sys/livearea/contents/bg.png",
             "sce_sys/livearea/contents/startup.png",
         ):
-            if not archive.read(image_name).startswith(b"\\x89PNG\\r\\n\\x1a\\n"):
+            if not archive.read(image_name).startswith(b"\x89PNG\r\n\x1a\n"):
                 raise ValueError(f"invalid PNG signature: {image_name}")
         try:
             root = ET.fromstring(archive.read("sce_sys/livearea/contents/template.xml"))
