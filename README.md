@@ -4,7 +4,7 @@
 
 Vita Desktop Node (VDN) keeps the existing PS Vita telemetry experience working while building a larger host-side ecosystem: Linux/Windows desktop integration, a secure node protocol, application catalog, approval-gated PC actions, file workflows, remote desktop capabilities and multi-node networking.
 
-> **Current development release:** the Vita application still uses the legacy VMON1 telemetry protocol. The VDN2 host framing and local host foundations exist, but VDN2 pairing, network transport and the corresponding Vita interface are not shipped yet. Read [Release 1 scope](docs/RELEASE_1.md) before treating any roadmap item as available.
+> **Current development release:** the Vita application still uses the legacy VMON1 telemetry protocol. The host now includes a pairing store, local device-approval controls and a TLS-only read-only service foundation. Automatic listener/certificate setup and the Vita-side VDN2 client are still pending. Read [Release 1 scope](docs/RELEASE_1.md) before treating any roadmap item as available.
 
 <div align="center">
 
@@ -26,7 +26,7 @@ Vita Desktop Node (VDN) keeps the existing PS Vita telemetry experience working 
 | Linux application catalog | Implemented | XDG `.desktop` metadata scanner |
 | Host Action Manager | Implemented locally | Persistent actions, local approval, confirmation, audit and shell-free argv execution |
 | PC Control Center | Implemented locally | Tkinter UI for Linux app import, custom actions and local action management |
-| VDN2 pairing/network bridge | Not implemented | No authenticated VDN2 listener or Vita pairing yet |
+| VDN2 pairing/network bridge | Host foundation | One-time pairing, local approval, revocation and TLS service class; no automatic listener startup or Vita client yet |
 | PSVita Direct Node sync | Planned | Folder design documented; no transfer engine |
 | Remote View / Remote Desktop / Extended Display | Planned | Separate product modes; no streaming provider shipped |
 | Secure PTY / mesh / multi-node | Planned | Security and architecture requirements documented |
@@ -105,10 +105,11 @@ Run the host unit tests:
 PYTHONPATH=server python -m unittest discover -s server/tests/vdn -v
 ```
 
-The capability report is deliberately conservative. Pairing, PTY, file transfer, mesh networking and display capabilities remain false until working implementations are integrated.
+The capability report is deliberately conservative. Host-side pairing primitives do not mean the Vita can pair yet; PTY, file transfer, mesh networking and display capabilities remain unavailable.
 
 ## Architecture and documentation
 
+- [VDN2 Pairing & Host Service](docs/VDN2_PAIRING_HOST_SERVICE.md)
 - [Release 1 scope and checklist](docs/RELEASE_1.md)
 - [Roadmap R1–R8](docs/ROADMAP.md)
 - [Host architecture](docs/ARCHITECTURE.md)
