@@ -1,3 +1,4 @@
+import ssl
 import tempfile
 import unittest
 import uuid
@@ -61,6 +62,18 @@ class HostServiceTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertEqual(result["result"]["status"], "pending_host_approval")
         self.assertEqual(self.store.paired_devices(), [])
+
+
+
+class HostServiceTLSGuardTests(unittest.IsolatedAsyncioTestCase):
+    async def test_listener_rejects_client_tls_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = PairingStore(Path(tmp))
+            service = HostService(store, lambda: {})
+            context = ssl.create_default_context()
+            with self.assertRaisesRegex(ValueError, "PROTOCOL_TLS_SERVER"):
+                await service.start("127.0.0.1", 0, tls_context=context)
+            await service.close()
 
 
 if __name__ == "__main__":
