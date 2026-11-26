@@ -13,6 +13,9 @@ mkdir -p "$PKG/DEBIAN" "$PKG/usr/lib/vitamon" "$PKG/usr/bin" \
 cp "$ROOT/packaging/debian/control" "$PKG/DEBIAN/control"
 sed -i "s/^Version:.*/Version: $VERSION/" "$PKG/DEBIAN/control"
 cp -R "$ROOT/server/." "$PKG/usr/lib/vitamon/"
+if [ -f "$ROOT/vita/sce_sys/icon0.png" ]; then
+    cp "$ROOT/vita/sce_sys/icon0.png" "$PKG/usr/lib/vitamon/icon0.png"
+fi
 cp "$ROOT/packaging/linux/vitamon" "$PKG/usr/bin/vitamon"
 chmod 0755 "$PKG/usr/bin/vitamon"
 cp "$ROOT/packaging/debian/vitamon.desktop" "$PKG/usr/share/applications/vitamon.desktop"
