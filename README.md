@@ -4,7 +4,7 @@
 
 Vita Desktop Node (VDN) keeps the existing PS Vita telemetry experience working while building a larger host-side ecosystem: Linux/Windows desktop integration, a secure node protocol, application catalog, approval-gated PC actions, file workflows, remote desktop capabilities and multi-node networking.
 
-> **Current development release:** the Vita application still uses the legacy VMON1 telemetry protocol. The host now includes a pairing store, local device-approval controls and a TLS-only read-only service foundation. Automatic listener/certificate setup and the Vita-side VDN2 client are still pending. Read [Release 1 scope](docs/RELEASE_1.md) before treating any roadmap item as available.
+> **Current development build:** `0.1.0-alpha.2`.  the Vita application still uses the legacy VMON1 telemetry protocol. The host now includes a pairing store, local device-approval controls and a TLS-only read-only service foundation. Automatic listener/certificate setup and the Vita-side VDN2 client are still pending. Read [Release 1 scope](docs/RELEASE_1.md) before treating any roadmap item as available.
 
 <div align="center">
 
@@ -111,11 +111,11 @@ The capability report is deliberately conservative. Host-side pairing primitives
 ## Architecture and documentation
 
 - [VDN2 Pairing & Host Service](docs/VDN2_PAIRING_HOST_SERVICE.md)
+- [VPK build and handoff](docs/VPK_BUILD_HANDOFF.md)
 - [Release 1 scope and checklist](docs/RELEASE_1.md)
 - [Roadmap R1–R8](docs/ROADMAP.md)
 - [Host architecture](docs/ARCHITECTURE.md)
 - [VDN2 protocol and security baseline](docs/VDN2_PROTOCOL.md)
-- [VDN2 Pairing & Host Service](docs/VDN2_PAIRING_HOST_SERVICE.md)
 - [Linux installation and Debian packaging](docs/LINUX_INSTALL.md)
 - [Vita client preview and limitations](docs/VITA_CLIENT_PREVIEW.md)
 - [Add-on framework](docs/ADDON_SYSTEM.md)
