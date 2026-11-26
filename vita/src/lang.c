@@ -194,8 +194,9 @@ void lang_set(Lang l)
 #include <psp2/io/stat.h>
 #include <psp2/system_param.h>
 
-#define CFG_DIR "ux0:data/VitaMon"
+#define CFG_DIR "ux0:data/VDN"
 #define CFG_FILE CFG_DIR "/lang.txt"
+#define LEGACY_CFG_FILE "ux0:data/VitaMon/lang.txt"
 
 /* Código de 2 letras que se guarda en el archivo de configuración. */
 static const char *const codes[LANG_COUNT] = {"es", "en", "pt", "fr", "de", "it"};
@@ -228,6 +229,8 @@ static int load_saved(Lang *out)
 {
     char buf[8] = {0};
     int i, n, fd = sceIoOpen(CFG_FILE, SCE_O_RDONLY, 0);
+    if (fd < 0)
+        fd = sceIoOpen(LEGACY_CFG_FILE, SCE_O_RDONLY, 0);
     if (fd < 0)
         return -1;
     n = sceIoRead(fd, buf, sizeof(buf) - 1);
