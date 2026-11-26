@@ -6,7 +6,7 @@ The PC Control Center is a host-local Tkinter window opened from the desktop mon
 
 1. Scan Linux XDG desktop entries and import applications into the persistent host action store.
 2. Add a custom action by entering a display name and executable plus arguments. The command line is parsed into an argv list; no shell is used.
-3. Approve and enable, disable, run with explicit confirmation, or revoke an action.
+3. Approve and enable, disable, launch with explicit confirmation, or revoke an action.
 4. Inspect the bounded local action audit log.
 
 ## Application discovery
@@ -24,6 +24,10 @@ firefox --new-window
 ```
 
 The action is created disabled and unapproved. The user must approve it and then explicitly confirm each launch. Shell interpreters and privilege-escalation frontends are rejected by the host action manager.
+
+## Launch behavior
+
+The Run action starts a desktop application as a detached process and returns its PID immediately. It does not wait for a browser, game launcher or other GUI process to close, and it does not tie the process lifetime to the Control Center window. The separate Action Manager `run()` method is reserved for short bounded commands.
 
 ## State and security
 
