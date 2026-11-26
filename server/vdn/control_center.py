@@ -37,8 +37,8 @@ class ControlCenter:
         self.parent = parent
         self.window = tk.Toplevel(parent)
         self.window.title("Vita Desktop Node — PC Control Center")
-        self.window.geometry("900x610")
-        self.window.minsize(720, 460)
+        self.window.geometry("980x720")
+        self.window.minsize(820, 600)
         self.paths = AppPaths.discover()
         self.manager = ActionManager(self.paths.state / "actions")
         self.pairing = PairingStore(self.paths.state / "security")
@@ -168,8 +168,8 @@ class ControlCenter:
             window = self.pairing.open_pairing_window(ttl=180)
             messagebox.showinfo(
                 "VDN2 pairing window",
-                "A one-time pairing code is active for 3 minutes. Share it only with the Vita you are pairing.\\n\\n"
-                f"{window['code']}\\n\\n"
+                "A one-time pairing code is active for 3 minutes. Share it only with the Vita you are pairing.\n\n"
+                f"{window['code']}\n\n"
                 "The code is shown once and is not stored in plaintext. The device will remain pending until you approve it here.",
                 parent=self.window,
             )
@@ -205,8 +205,8 @@ class ControlCenter:
             self.refresh_pairing()
             return
         requested = request["requested_permissions"]
-        summary = (f"Device: {request['device_name']}\\nID: {request['device_id']}\\n\\n"
-                   f"Requested permissions: {', '.join(requested) or 'none'}\\n\\n"
+        summary = (f"Device: {request['device_name']}\nID: {request['device_id']}\n\n"
+                   f"Requested permissions: {', '.join(requested) or 'none'}\n\n"
                    "Grant only permissions needed. Enter a comma-separated subset below.")
         grant_text = simpledialog.askstring("Review device permissions", summary,
                                             initialvalue="node.info", parent=self.window)
@@ -217,8 +217,8 @@ class ControlCenter:
             result = self.pairing.approve_request(request_id, permissions=granted)
             messagebox.showinfo(
                 "Device paired",
-                f"{result['device_name'] if 'device_name' in result else request['device_name']} is now paired.\\n\\n"
-                f"Device credential (shown once):\\n{result['credential']}\\n\\n"
+                f"{result['device_name'] if 'device_name' in result else request['device_name']} is now paired.\n\n"
+                f"Device credential (shown once):\n{result['credential']}\n\n"
                 "Store it only on the paired Vita. It will not be shown again.",
                 parent=self.window,
             )
@@ -295,8 +295,8 @@ class ControlCenter:
             command_preview = shlex.join(details.get("argv") or [])
             approved = messagebox.askyesno(
                 "Review and approve action",
-                f"Approve '{details['name']}' and enable it on this PC?\\n\\n"
-                f"Executable and arguments:\\n{command_preview}\\n\\n"
+                f"Approve '{details['name']}' and enable it on this PC?\n\n"
+                f"Executable and arguments:\n{command_preview}\n\n"
                 "This command remains stored on this PC. Each launch will still require confirmation.",
                 parent=self.window,
             )
