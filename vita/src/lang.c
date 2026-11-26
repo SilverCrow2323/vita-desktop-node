@@ -266,6 +266,7 @@ void lang_init(void)
     memset(&boot, 0, sizeof(boot));
     apputil_up = sceAppUtilInit(&init, &boot) >= 0;
     cur = load_saved(&l) == 0 ? l : from_system();
+    save(); /* persist the migrated preference under ux0:data/VDN */
 }
 
 void lang_fini(void)
