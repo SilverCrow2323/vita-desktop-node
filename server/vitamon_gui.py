@@ -207,6 +207,7 @@ class App:
         self.lhm_ok = None
         self.labels = []  # (widget, clave) para retraducir al cambiar de idioma
         self.tray = None  # pystray.Icon mientras la opción de bandeja esté activa
+        self.control_window = None
 
         root.minsize(520, 0)
         self.icon_path = None
@@ -340,6 +341,24 @@ class App:
         self.labels.append((lg, "log"))
         self.log_box = tk.Text(lg, height=6, width=60, state="disabled", font=("Consolas", 9), wrap="word")
         self.log_box.pack(fill="both", expand=True)
+
+        self.control_btn = ttk.Button(top, text="Open PC Control Center", command=self.open_control_center)
+        self.control_btn.grid(row=12, column=0, columnspan=2, sticky="ew", padx=10, pady=(2, 8))
+
+    def open_control_center(self):
+        try:
+            from vdn.control_center import open_control_center
+            if self.control_window is not None:
+                try:
+                    if self.control_window.window.winfo_exists():
+                        self.control_window.window.lift()
+                        return
+                except tk.TclError:
+                    pass
+            self.control_window = open_control_center(self.root)
+        except Exception as exc:
+            log_error(f"PC Control Center could not open: {exc!r}")
+            messagebox.showerror(APP_NAME, f"Could not open PC Control Center: {exc}")
 
     # --- textos ---
 
