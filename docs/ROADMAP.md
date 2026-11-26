@@ -54,3 +54,4 @@ The roadmap distinguishes implemented foundations from planned release scope.
 A release is not considered complete merely because its documentation exists.
 Each release must ship at least one new, tested user-facing capability, and every
 platform-specific limitation must be stated explicitly.
+\n\n### PC Control Center implementation\nThe local Tkinter Control Center now scans Linux desktop entries, creates custom argv actions, manages approvals and revocations, runs confirmed local actions, and displays the audit log. Windows discovery and Vita/VDN2 transport remain pending.\n
