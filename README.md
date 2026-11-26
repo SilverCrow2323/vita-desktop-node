@@ -30,7 +30,7 @@ Design documents:
 - **Linux host port:** initial MX Linux/XFCE integration and Debian package instructions are in [Linux installation](docs/LINUX_INSTALL.md).
 - **Add-on architecture:** [modular add-on contract](docs/ADDON_SYSTEM.md).
 - **PSVita Direct Node:** [folder layout and synchronization behavior](docs/PSVITA_DIRECT_NODE_SYNC.md).
-- **Application Catalog and PC Actions:** [Linux menu discovery, Vita-created action proposals and approval model](docs/APPLICATION_CATALOG.md).
+- **Vita client preview:** [VPK identity, included features, installation and limitations](docs/VITA_CLIENT_PREVIEW.md). The current Vita binary is still VMON1-compatible telemetry; VDN2 and remote features are not implemented on Vita yet.\n- **Application Catalog and PC Actions:** [Linux menu discovery, Vita-created action proposals and approval model](docs/APPLICATION_CATALOG.md).
 - **R2 display scope:** [Remote View, Remote Desktop and Extended Display](docs/R2_DISPLAY_REMOTE.md).
 - **Roadmap:** [release milestones R1–R8](docs/ROADMAP.md).
 - **Release policy:** [one tested feature per milestone release](docs/RELEASE_POLICY.md).
