@@ -33,7 +33,7 @@ Control and data planes are distinct. A future media transport must not weaken c
 Implemented host-side flow:
 
 1. User explicitly enables pairing on the host.
-2. Host displays a short-lived, single-use pairing code and device identity/fingerprint.
+2. Host displays a short-lived, single-use pairing code. Host certificate fingerprint display and rotation UI remain pending.
 3. Client submits the code over the TLS control channel using `pairing.request`.
 4. The request remains pending; the one-time code is consumed and grants no access.
 5. The host user reviews the device and grants a subset of its requested permissions in the PC Control Center.
