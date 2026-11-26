@@ -13,11 +13,14 @@ Implemented host foundations:
 - Built-in add-on contracts, registry and lifecycle manager.
 - Linux desktop-entry application catalog.
 - Persistent host action manager with local approval, confirmation and audit.
+- VDN2 pairing store with one-time codes, host-local approval, per-device credentials, permission grants and revocation.
+- TLS-only host service module with authenticated read-only node information/capability methods.
+- PC Control Center pairing tab for opening pairing windows, reviewing pending devices and revoking paired devices.
 - Tkinter PC Control Center for local Linux application/action management.
 - Initial Linux Debian packaging foundation.
 - Vita VPK identity and verification tooling.
 
-Not implemented: VDN2 listener, TLS/pairing, remote catalog transport, Vita Direct Node transfer engine, PTY, remote display providers, mesh routing or multi-node orchestration.
+Not implemented: automatic TLS certificate provisioning/listener startup, Vita-side TLS and pairing client, remote catalog transport, Vita Direct Node transfer engine, PTY, remote display providers, mesh routing or multi-node orchestration.
 
 ## Design principles
 
@@ -45,8 +48,8 @@ server/
     app_catalog.py
     action_manager.py
     control_center.py
-    security/       # future pairing and credentials
-    services/       # future terminal, files, display, etc.
+    security/       # pairing, credential storage and authorization
+    services/       # authenticated host service; future terminal/files/display
     platforms/
       linux/
       windows/
@@ -77,8 +80,8 @@ Retain the Windows distribution while moving registry autostart, GPU/sensor prov
 | Service | Responsibility | Current state |
 |---|---|---|
 | Node Core | Lifecycle, identity, capabilities | Foundation implemented |
-| Protocol | Framing and envelope validation | Host framing implemented; no listener |
-| Pairing | Device approval and credentials | Planned |
+| Protocol | Framing and envelope validation | Host framing and TLS listener class implemented; certificate provisioning/startup integration pending |
+| Pairing | Device approval and credentials | Host store + local Control Center review implemented; Vita handshake pending |
 | Monitoring | Metrics and sensor adapters | Legacy telemetry path |
 | Processes | Process inventory | Planned |
 | Actions | Local approved application launch | Host-local implementation |
