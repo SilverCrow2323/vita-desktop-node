@@ -16,6 +16,20 @@ CPU, GPU, temperatures, RAM, network and disk on the Vita's screen, updated ever
 
 <p align="center"><img src="docs/vita.jpg" alt="VitaMon running on a PS Vita: CPU and GPU load, temperatures, graphs, RAM, network and disk" width="720"></p>
 
+## Vita Desktop Node development
+
+This fork is evolving into Vita Desktop Node while preserving the original VMON1 Vita telemetry path.
+
+- **Remote View + Extended Display** are separate planned capabilities; mirroring is not presented as a second monitor.
+- **Integrated networking** targets LAN plus optional Tailscale/WireGuard routing.
+- **Secure terminal** means paired devices, per-device permissions and no implicit root shell.
+
+Design documents:
+- [VDN2 protocol and security baseline](docs/VDN2_PROTOCOL.md)
+- [Host architecture and implementation roadmap](docs/ARCHITECTURE.md)
+
+These documents define the target architecture. Remote terminal, file transfer, mesh networking, video streaming and virtual-display management are not yet implemented.
+
 ## Features
 
 - **CPU:** total load, a bar per thread, temperature and the CPU model name.
