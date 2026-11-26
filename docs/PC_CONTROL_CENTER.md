@@ -23,7 +23,7 @@ The command field is parsed with shell-style quoting into an argv array, but is 
 firefox --new-window
 ```
 
-The action is created disabled and unapproved. The user must approve it and then explicitly confirm each launch. Shell interpreters and privilege-escalation frontends are rejected by the host action manager.
+The action is created disabled and unapproved. The user must approve each action locally. Before approval, the Control Center displays the exact host-side executable and argument vector for review. Every launch still requires a separate confirmation. Shell interpreters and privilege-escalation frontends are rejected by the host action manager.
 
 ## Launch behavior
 
