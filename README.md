@@ -1,13 +1,13 @@
 <div align="center">
 
-# VitaMon
+# Vita Desktop Node
 
-**Turn your PS Vita into a live hardware monitor for your Windows PC.**
+**A PS Vita + PC desktop companion. The current Vita client is a VMON1 telemetry preview; Direct Node features are under active development.**
 
 CPU, GPU, temperatures, RAM, network and disk on the Vita's screen, updated every second over WiFi.
 
-[![Build](https://github.com/MrWhite2312-IS/VitaPCMonitor/actions/workflows/build.yml/badge.svg)](https://github.com/MrWhite2312-IS/VitaPCMonitor/actions/workflows/build.yml)
-[![Latest release](https://img.shields.io/github/v/release/MrWhite2312-IS/VitaPCMonitor?include_prereleases&label=download&cacheSeconds=3600)](https://github.com/MrWhite2312-IS/VitaPCMonitor/releases)
+[![Build](https://github.com/SilverCrow2323/vita-desktop-node/actions/workflows/build.yml/badge.svg)](https://github.com/SilverCrow2323/vita-desktop-node/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/SilverCrow2323/vita-desktop-node?include_prereleases&label=download&cacheSeconds=3600)](https://github.com/SilverCrow2323/vita-desktop-node/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **English** · [Español](README.es.md)
