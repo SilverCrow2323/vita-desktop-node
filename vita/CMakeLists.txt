@@ -8,12 +8,12 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 endif()
 
-project(VitaMon C)
+project(VitaDesktopNode C)
 include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
 
-set(VITA_APP_NAME "VitaMon")
-set(VITA_TITLEID  "VMON00001")
-set(VITA_VERSION  "01.30")
+set(VITA_APP_NAME "Vita Desktop Node")
+set(VITA_TITLEID  "VDN000001")
+set(VITA_VERSION  "00.10")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O2")
