@@ -23,9 +23,13 @@ Release 1 scope and acceptance criteria: [RELEASE_1.md](RELEASE_1.md).
 
 ## R2 — VDN2 bridge and desktop interaction
 
-- Host TCP/TLS service and capability handshake.
-- Explicit short-lived pairing, per-device credentials, revocation and host identity pinning.
-- Per-device authorization and audited request dispatch.
+- [x] Host-side pairing store with short-lived one-time codes and invalid-attempt lockout.
+- [x] Local PC Control Center review/approval, permission subset grants and device revocation.
+- [x] Hashed per-device credentials, expiry and permission checks.
+- [x] TLS-only asyncio host service class with authenticated read-only node info/capability methods.
+- [ ] Automatic TLS certificate provisioning, listener lifecycle and host identity fingerprint display.
+- [ ] Vita-side TLS validation/pinning, pairing flow and secure credential storage.
+- [ ] Per-device audit integration and authenticated service integration tests.
 - Sync application catalog metadata to paired Vita clients.
 - Vita catalog browser and host-confirmed PC action requests.
 - Remote View / screen mirroring.
