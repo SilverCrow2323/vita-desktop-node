@@ -74,5 +74,47 @@ class ActionManagerTests(unittest.TestCase):
         self.assertFalse(refreshed["approved"]); self.assertFalse(refreshed["enabled"])
 
 
+    def test_launch_returns_pid_without_waiting_for_desktop_process_exit(self):
+        m = self.manager
+        m.add_custom_action(
+            action_id="test.launch",
+            name="Background launch",
+            argv=[sys.executable, "-c", "import time; time.sleep(0.25)"],
+        )
+        m.approve("test.launch")
+        result = m.launch("test.launch", confirmed=True)
+        self.assertTrue(result["started"])
+        self.assertIsInstance(result["pid"], int)
+        self.assertGreater(result["pid"], 0)
+        audit = m.audit_file.read_text(encoding="utf-8")
+        self.assertIn('"event": "launched"', audit)
+        self.assertIn('"pid":', audit)
+
+    def test_launch_requires_approval_and_confirmation(self):
+        m = self.manager
+        m.add_custom_action(
+            action_id="test.launchguard",
+            name="Guarded launch",
+            argv=[sys.executable, "--version"],
+        )
+        with self.assertRaisesRegex(ActionError, "approved"):
+            m.launch("test.launchguard", confirmed=True)
+        m.approve("test.launchguard")
+        with self.assertRaisesRegex(ActionError, "confirmation"):
+            m.launch("test.launchguard")
+
+    def test_local_approval_details_are_not_in_public_catalog(self):
+        m = self.manager
+        m.add_custom_action(
+            action_id="test.details",
+            name="Reviewed action",
+            argv=[sys.executable, "--version"],
+        )
+        details = m.local_details("test.details")
+        self.assertEqual(details["argv"], [sys.executable, "--version"])
+        self.assertNotIn("argv", m.public_action("test.details"))
+        self.assertNotIn("argv", m.public_catalog()[0])
+
+
 if __name__ == "__main__":
     unittest.main()
