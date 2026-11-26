@@ -4,9 +4,9 @@
 
 ## Pairing lifecycle
 
-1. The user opens a short pairing window locally in the host application.
+1. The user opens a short pairing window from the PC Control Center's Paired Devices tab.
 2. The host displays a high-entropy, one-time code (30–600 second window).
-3. The Vita sends `pairing.request` over the TLS control channel with its UUID, display name and requested permissions.
+3. Once the TLS host service is started with a configured certificate, the Vita sends `pairing.request` over the TLS control channel with its UUID, display name and requested permissions.
 4. The code is consumed by the first valid request. Five invalid attempts close the window.
 5. The request remains pending; it does not create an authenticated device.
 6. The user reviews and approves the request locally. The host may grant only a subset of requested permissions.
@@ -35,7 +35,7 @@ The Vita client must validate/pin the host certificate or public-key fingerprint
 
 - No remote action execution, terminal, file, display or process-control methods are registered.
 - No unauthenticated capability or host inventory endpoint exists.
-- Pairing approval UI is not yet integrated into the PC Control Center.
+- Pairing approval UI is integrated into the PC Control Center; automatic listener/certificate startup is not.
 - No Vita-side VDN2 transport, TLS stack integration or pairing UI is implemented.
 - Rate limiting is per pairing window (five invalid attempts); connection-level throttling and abuse monitoring remain future hardening.
 - There is no session-token exchange yet; the per-device credential is presented over TLS for each request.
