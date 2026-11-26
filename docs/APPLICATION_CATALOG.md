@@ -2,63 +2,36 @@
 
 ## Goal
 
-The host maintains one normalized catalog of launchable desktop applications and
-user-defined actions. The PC editor and PS Vita browser consume the same catalog.
-The Vita never parses operating-system menu files and never receives an executable
-shell string.
+The host maintains a normalized catalog of launchable desktop applications and user-defined actions. The PC Control Center and a future PS Vita browser will consume the same metadata model. The Vita must never parse operating-system menu files or receive executable shell strings.
 
-## Linux discovery
+## Linux discovery — implemented
 
-The first provider indexes freedesktop desktop-entry application files from:
+The first provider indexes freedesktop desktop-entry application files from XDG_DATA_HOME/applications (normally `~/.local/share/applications`) and each applications directory under XDG_DATA_DIRS (normally `/usr/local/share` and `/usr/share`).
 
-- XDG_DATA_HOME/applications (normally ~/.local/share/applications)
-- Each applications directory under XDG_DATA_DIRS (normally /usr/local/share
-  and /usr/share)
+The scanner reads desktop-entry metadata, filters hidden and non-displayable entries, extracts name/categories/icon and derives a stable ID from the desktop file's relative path. It does not execute `Exec` while scanning and does not include raw command data in the public catalog.
 
-The scanner reads desktop-entry metadata, filters hidden and non-displayable
-entries, extracts name/categories/icon, and derives a stable ID from the desktop
-file's relative path. It does not execute Exec while scanning and does not
-include the raw command in the public catalog payload.
+This is an initial metadata scanner, not a complete freedesktop menu implementation. Localized names, OnlyShowIn / NotShowIn, TryExec validation, MIME activation and desktop action groups remain possible refinements.
 
-The initial scanner is a metadata provider, not yet a complete freedesktop menu
-implementation: desktop-file precedence is handled by desktop-file ID, while
-localized names, OnlyShowIn / NotShowIn, TryExec validation, MIME activation,
-and desktop action groups are future refinements.
+## Host Action Manager — implemented locally
 
-## Windows provider
+The Host Action Manager stores executable argv privately on the host. It supports registering discovered applications, creating custom actions from validated argv arrays, local approval and enable/disable state, explicit confirmation before execution, shell-free process launch, blocked shell/privilege-escalation frontends, revocation, bounded JSONL audit history and metadata-only public records.
 
-The catalog API is platform-neutral. A Windows provider will enumerate Start Menu
-shortcuts and registered application entries, resolve shortcuts on the host, and
-publish the same metadata shape. It must not make Windows-specific paths or
-commands part of the Vita protocol.
+When a discovered application's argv changes, its previous approval is invalidated and the action returns to a disabled state.
 
-## Vita-authored actions
+## PC Control Center — implemented locally
 
-The Vita can propose a custom action containing an ID, display name, category,
-and an argv array. The host validates the proposal and stores it as disabled.
-A user must approve it in the PC Command Center before it can be launched.
-Arguments are an array, not a shell command string; execution must use a
-non-shell process API. Privileged actions require an additional confirmation.
+The Tkinter Control Center provides Linux catalog scanning/import, custom action creation, approval, enable/disable, local run confirmation, revocation and activity-log inspection. It is a host-local UI; it is not a remote Vita interface.
 
-## Synchronization and conflict rules
+## Windows provider — pending
 
-- The host is authoritative for whether an action is approved and enabled.
-- Both clients may edit presentation metadata (name, category, icon, ordering).
-- Vita-created actions enter a pending-approval state.
-- Stable IDs identify actions across reconnects; catalog revisions identify changes.
-- A removed application becomes unavailable, not an instruction to delete user data.
-- Per-device permissions decide which actions each paired Vita may invoke.
+The catalog API is platform-neutral. A Windows provider is expected to enumerate Start Menu shortcuts and registered application entries, resolve shortcuts on the host and publish the same metadata shape. It must not expose Windows-specific executable paths or commands to the Vita.
 
-## Catalog record
+## Vita-authored actions — future workflow
 
-The public record contains action_id, name, categories, icon, source, and platform.
-Executable details remain host-side and are never sent as an arbitrary shell string
-to the Vita.
+A paired Vita client may eventually propose a custom action containing an ID, display name, category and validated argument data. The host must store it disabled and require approval in the PC Control Center before it can be launched. Remote execution also requires a paired-device permission and host confirmation policy.
 
 ## Current implementation status
 
-Implemented: Linux desktop-entry metadata scanning, stable IDs, safe public records,
-Vita action proposal validation, and tests.
+Implemented: Linux desktop-entry metadata scanning, stable IDs, safe public records, proposal validation, persistent host action storage, local approval/confirmation, execution audit and PC Control Center.
 
-Not implemented yet: persistent action database, PC graphical editor, Windows
-discovery provider, VDN2 catalog transport, Vita catalog UI, and action execution.
+Not implemented: Windows discovery, VDN2 catalog transport, Vita catalog UI, remote action requests, pairing or remote confirmation.
