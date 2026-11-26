@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=VitaMon
+Comment=PC hardware monitor for PlayStation Vita
+Exec=vitamon
+Icon=vitamon
+Terminal=false
+Categories=Utility;System;Monitor;
+StartupNotify=true
