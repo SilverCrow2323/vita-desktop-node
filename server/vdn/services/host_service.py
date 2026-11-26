@@ -86,8 +86,10 @@ class HostService:
         try:
             while True:
                 try:
-                    message = await read_frame(reader, max_frame=MAX_FRAME)
-                except (FrameError, asyncio.IncompleteReadError):
+                    message = await asyncio.wait_for(
+                        read_frame(reader, max_frame=MAX_FRAME), timeout=30
+                    )
+                except (FrameError, asyncio.IncompleteReadError, asyncio.TimeoutError):
                     break
                 response = self.dispatch(message)
                 await write_frame(writer, response, max_frame=MAX_FRAME)
@@ -107,7 +109,8 @@ class HostService:
             raise ValueError("a configured TLS server context is required")
         if tls_context.protocol != ssl.PROTOCOL_TLS_SERVER:
             raise ValueError("TLS context must use PROTOCOL_TLS_SERVER")
-        tls_context.minimum_version = ssl.TLSVersion.TLSv1_2
+        if tls_context.minimum_version < ssl.TLSVersion.TLSv1_2:
+            tls_context.minimum_version = ssl.TLSVersion.TLSv1_2
         self._server = await asyncio.start_server(
             self._client, host, int(port), ssl=tls_context,
             limit=MAX_FRAME + 4,
