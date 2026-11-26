@@ -85,6 +85,33 @@ class PairingStoreTests(unittest.TestCase):
                                     required_permission="node.info")
 
 
+
+    def test_revoked_device_can_pair_again_but_active_device_cannot(self):
+        request_id = self._pending()
+        self.store.approve_request(request_id)
+        window = self.store.open_pairing_window()
+        with self.assertRaisesRegex(PairingError, "already paired"):
+            self.store.request_pairing(
+                code=window["code"], device_id=self.device_id, device_name="Vita",
+                requested_permissions=["node.info"],
+            )
+        self.store.revoke_device(self.device_id)
+        window = self.store.open_pairing_window()
+        pending = self.store.request_pairing(
+            code=window["code"], device_id=self.device_id, device_name="Vita",
+            requested_permissions=["node.info"],
+        )
+        self.assertEqual(pending["status"], "pending_host_approval")
+
+    def test_duplicate_pending_device_is_rejected(self):
+        self._pending()
+        window = self.store.open_pairing_window()
+        with self.assertRaisesRegex(PairingError, "pending"):
+            self.store.request_pairing(
+                code=window["code"], device_id=self.device_id, device_name="Vita",
+                requested_permissions=["node.info"],
+            )
+
     def test_expired_device_credential_is_rejected(self):
         request_id = self._pending()
         result = self.store.approve_request(request_id)
