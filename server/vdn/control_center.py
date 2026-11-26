@@ -217,7 +217,7 @@ class ControlCenter:
             result = self.pairing.approve_request(request_id, permissions=granted)
             messagebox.showinfo(
                 "Device paired",
-                f"{result['device_name'] if 'device_name' in result else request['device_name']} is now paired.\n\n"
+                f"{request['device_name']} is now paired.\n\n"
                 f"Device credential (shown once):\n{result['credential']}\n\n"
                 "Store it only on the paired Vita. It will not be shown again.",
                 parent=self.window,
