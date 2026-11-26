@@ -7,7 +7,7 @@ The Host Action Manager turns the desktop application catalog into a persistent,
 - The public catalog contains opaque IDs and display metadata only.
 - Executable argument vectors remain in a private host-side state file and are never returned by the public catalog.
 - Scanned desktop entries and custom actions start disabled and unapproved.
-- A person operating the host must explicitly approve an action before enabling it.
+- A person operating the host must explicitly approve an action before enabling it.- A local-only details method lets the PC Control Center display the exact executable and argv before approval; this method must never be exposed in a remote catalog or API.
 - Actions requiring confirmation (the default) cannot run without explicit confirmation.
 - Launching uses an argument vector with shell disabled. Shell interpreters and privilege-escalation frontends are rejected.
 - The manager has no network listener. Pairing, per-device permissions and VDN2 request authentication must be enforced by a future transport before calling it.
