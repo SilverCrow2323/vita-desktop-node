@@ -1,20 +1,25 @@
-# Linux Host — Initial VitaMon Port
+# Linux Host — Installation and Packaging
 
-The first Linux target is MX Linux/XFCE. The existing VitaMon GUI and VMON1 sender are being ported before new Vita Desktop Node services are added.
+The first Linux validation target is MX Linux/XFCE. The host retains compatibility with the original VitaMon GUI while introducing Vita Desktop Node host foundations. The Debian package is an initial installable baseline, not a claim that every VDN service is available.
 
-## Current Linux integration
+## Current integration
 
-- XDG configuration: `$XDG_CONFIG_HOME/VitaMon/config.json` (defaults to `~/.config/VitaMon/config.json`).
-- Login startup: per-user XDG autostart entry at `$XDG_CONFIG_HOME/autostart/vitamon.desktop`.
-- Single-instance guard: per-user runtime lock (or cache fallback).
-- Hardware monitoring: psutil and Linux sensor interfaces where exposed.
-- Tray icon: optional pystray integration; the app remains usable without it.
+- XDG-aware configuration path discovery.
+- Per-user XDG autostart entry.
+- Per-user single-instance lock.
+- Python host dependencies and Tkinter UI.
+- Optional pystray integration; the app remains usable without a tray host.
+- Debian package build script using `dpkg-deb`.
+- Host-core node identity/configuration and local PC Control Center modules.
+
+Some packaging paths and launcher labels still use the legacy `vitamon` name during the transition. The PS Vita application itself is branded Vita Desktop Node.
 
 ## Build a Debian package
 
 On a Debian/Ubuntu-based development machine with Python 3 and dpkg tools:
 
 ```sh
+sudo apt update
 sudo apt install python3 python3-tk python3-psutil python3-pil python3-pystray dpkg-dev
 ./packaging/linux/build-deb.sh
 ```
@@ -25,8 +30,24 @@ The generated package is placed under `dist/`. Install it with:
 sudo apt install ./dist/vitamon_*_all.deb
 ```
 
+Check the actual filename generated in `dist/`; do not assume the package version from the wildcard.
+
+## Development smoke tests
+
+From the repository root:
+
+```sh
+PYTHONPATH=server python -m vdn.app --print-info
+PYTHONPATH=server python -m unittest discover -s server/tests/vdn -v
+```
+
+The node information report is a capability inventory, not a connection status screen. Pairing, terminal, file transfer, mesh and display capabilities must remain unavailable until implemented.
+
 ## Current limitations
 
-This is the initial host GUI port, not the complete Vita Desktop Node host. Windows-only GPU/FPS sources such as DXGI, LibreHardwareMonitor web-server integration and RivaTuner remain Windows-specific. Linux GPU support is currently strongest when `nvidia-smi` is available; other vendors need dedicated providers. Wayland tray behavior depends on the desktop environment and tray host.
-
-The package is a first installable baseline. AppImage, signed releases, polished icons and automatic dependency/desktop integration tests are later packaging work.
+- This is not yet a complete VDN2 host service; no authenticated VDN2 network listener or pairing is available.
+- Windows-only GPU/FPS sources such as DXGI, LibreHardwareMonitor web-server integration and RivaTuner remain Windows-specific.
+- Linux GPU support depends on available providers and hardware; missing sensor values are unavailable, not zero.
+- Wayland tray behavior depends on the compositor and tray host.
+- AppImage, signed packages and automated clean-install/uninstall validation remain future packaging work.
+- A successful package build does not replace testing on a clean MX Linux/XFCE installation.
