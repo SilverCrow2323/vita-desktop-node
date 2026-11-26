@@ -1,7 +1,7 @@
 """Cross-platform application catalog primitives.
 
-Linux desktop entries are indexed as metadata only. The Vita receives stable action
-IDs and display metadata; it never receives shell commands to execute.
+Linux desktop entries are indexed as metadata only. Executable argv remains on the
+host and is never included in the public catalog sent to the PS Vita.
 """
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import hashlib
 import os
 import re
 import shlex
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
@@ -24,13 +24,19 @@ class Application:
     categories: tuple[str, ...]
     icon: str | None
     source: str
+    launch_argv: tuple[str, ...]
     platform: str = "linux"
 
     def public_dict(self) -> dict[str, object]:
-        """Safe catalog payload; deliberately excludes the executable command."""
-        value = asdict(self)
-        value["categories"] = list(self.categories)
-        return value
+        """Safe catalog payload; host-only launch argv is intentionally omitted."""
+        return {
+            "action_id": self.action_id,
+            "name": self.name,
+            "categories": list(self.categories),
+            "icon": self.icon,
+            "source": self.source,
+            "platform": self.platform,
+        }
 
 
 def _xdg_application_dirs(env: dict[str, str] | None = None) -> list[Path]:
@@ -48,10 +54,6 @@ def _xdg_application_dirs(env: dict[str, str] | None = None) -> list[Path]:
             seen.add(key)
             result.append(candidate)
     return result
-
-
-def _desktop_name(parser: configparser.ConfigParser) -> str:
-    return parser["Desktop Entry"].get("Name", "").strip()
 
 
 def _categories(parser: configparser.ConfigParser) -> tuple[str, ...]:
@@ -82,17 +84,17 @@ def parse_desktop_file(path: Path, desktop_root: Path) -> Application | None:
         return None
     if section.get("NoDisplay", "false").lower() == "true":
         return None
-    name = _desktop_name(parser)
+    name = section.get("Name", "").strip()
     if not name:
         return None
     exec_value = section.get("Exec", "").strip()
     if not exec_value:
         return None
     try:
-        argv = shlex.split(_FIELD_CODE.sub("", exec_value))
+        argv = tuple(arg for arg in shlex.split(_FIELD_CODE.sub("", exec_value)) if arg)
     except ValueError:
         return None
-    if not [arg for arg in argv if arg]:
+    if not argv:
         return None
 
     icon = section.get("Icon", "").strip() or None
@@ -102,13 +104,14 @@ def parse_desktop_file(path: Path, desktop_root: Path) -> Application | None:
         categories=_categories(parser),
         icon=icon,
         source=path.name,
+        launch_argv=argv,
     )
 
 
 def scan_linux_applications(
     directories: Iterable[Path] | None = None,
 ) -> list[Application]:
-    """Return visible desktop applications, deduplicated by desktop-file basename."""
+    """Return visible desktop applications, deduplicated by desktop-file ID."""
     roots = list(_xdg_application_dirs() if directories is None else directories)
     found: dict[str, Application] = {}
     for root in roots:
