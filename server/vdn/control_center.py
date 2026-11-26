@@ -17,6 +17,18 @@ except ImportError:
     scan_linux_applications = None
 
 
+def parse_command_line(command: str) -> list[str]:
+    if not isinstance(command, str) or not command.strip():
+        raise ValueError('Enter an executable and optional arguments.')
+    try:
+        argv = shlex.split(command)
+    except ValueError as exc:
+        raise ValueError(f'Invalid command quoting: {exc}') from exc
+    if not argv:
+        raise ValueError('Enter an executable and optional arguments.')
+    return argv
+
+
 class ControlCenter:
     """Host-local GUI for catalog discovery, approvals, custom actions and audit."""
 
@@ -54,7 +66,9 @@ class ControlCenter:
         ttk.Button(toolbar, text="Refresh", command=self.refresh).pack(side="left")
 
         columns = ("name", "category", "origin", "approval", "confirmation")
-        self.tree = ttk.Treeview(self.actions_tab, columns=columns, show="headings", selectmode="browse")
+        list_frame = ttk.Frame(self.actions_tab)
+        list_frame.pack(fill="both", expand=True)
+        self.tree = ttk.Treeview(list_frame, columns=columns, show="headings", selectmode="browse")
         for key, title, width in (
             ("name", "Application / Action", 260), ("category", "Category", 150),
             ("origin", "Source", 110), ("approval", "Approval / State", 130),
@@ -62,7 +76,7 @@ class ControlCenter:
         ):
             self.tree.heading(key, text=title)
             self.tree.column(key, width=width, anchor="w")
-        ybar = ttk.Scrollbar(self.actions_tab, orient="vertical", command=self.tree.yview)
+        ybar = ttk.Scrollbar(list_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=ybar.set)
         self.tree.pack(side="left", fill="both", expand=True)
         ybar.pack(side="right", fill="y")
@@ -144,9 +158,7 @@ class ControlCenter:
         if command is None:
             return
         try:
-            argv = shlex.split(command)
-            if not argv:
-                raise ValueError("Enter an executable and optional arguments.")
+            argv = parse_command_line(command)
             # IDs are stable, readable and namespaced. Collisions are rejected by the manager.
             import re
             slug = re.sub(r"[^a-z0-9]+", "-", name.casefold()).strip("-")[:48] or "action"
