@@ -33,15 +33,19 @@ def make_sfo(title_id="VDN000001", title="Vita Desktop Node", app_ver="00.10"):
 
 
 class VpkVerifierTests(unittest.TestCase):
-    def make_vpk(self, path, title_id="VDN000001", omit=None):
+    def make_vpk(self, path, title_id="VDN000001", omit=None, overrides=None):
         with zipfile.ZipFile(path, "w", zipfile.ZIP_STORED) as archive:
             for name in REQUIRED_FILES:
                 if name == omit:
                     continue
-                archive.writestr(
-                    name,
-                    make_sfo(title_id) if name == "sce_sys/param.sfo" else b"x" * 300,
+                default = (
+                    make_sfo(title_id)
+                    if name == "sce_sys/param.sfo"
+                    else (b"\x89PNG\r\n\x1a\n" + b"x" * 300
+                          if name.endswith(".png")
+                          else b'<?xml version="1.0"?><livearea/>')
                 )
+                archive.writestr(name, (overrides or {}).get(name, default))
 
     def test_valid_package_identity(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -64,6 +68,23 @@ class VpkVerifierTests(unittest.TestCase):
             path = Path(tmp) / "incomplete.vpk"
             self.make_vpk(path, omit="eboot.bin")
             with self.assertRaisesRegex(ValueError, "missing package entries"):
+                verify_vpk(path)
+
+
+    def test_rejects_invalid_livearea_xml(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bad-livearea.vpk"
+            self.make_vpk(path, overrides={
+                "sce_sys/livearea/contents/template.xml": b"<broken"
+            })
+            with self.assertRaisesRegex(ValueError, "invalid LiveArea template XML"):
+                verify_vpk(path)
+
+    def test_rejects_invalid_png_signature(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bad-png.vpk"
+            self.make_vpk(path, overrides={"sce_sys/icon0.png": b"not a png"})
+            with self.assertRaisesRegex(ValueError, "invalid PNG signature"):
                 verify_vpk(path)
 
     def test_rejects_invalid_sfo(self):
