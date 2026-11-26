@@ -40,11 +40,15 @@ def build_node_info(paths: AppPaths) -> dict[str, Any]:
         "capabilities": {
             "telemetry.vmon1": True,
             "vdn2.framing": True,
+            "catalog.linux_desktop_scan": True,
+            "actions.custom_proposals": True,
+            "actions.execution": False,
             "vdn2.pairing": False,
             "terminal.pty": False,
             "files.transfer": False,
             "network.mesh": False,
             "display.remote_view": False,
+            "display.remote_desktop": False,
             "display.extended": False,
         },
     }
