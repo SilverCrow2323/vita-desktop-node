@@ -25,7 +25,7 @@ Vita Desktop Node (VDN) keeps the existing PS Vita telemetry experience working 
 | Add-on framework | Foundation | Built-in add-on contracts, registry and lifecycle manager |
 | Linux application catalog | Implemented | XDG `.desktop` metadata scanner |
 | Host Action Manager | Implemented locally | Persistent actions, local approval, confirmation, audit and shell-free argv execution |
-| PC Control Center | Implemented locally | Tkinter UI for Linux app import, custom actions and local action management |
+| PC Control Center | Implemented locally | Tkinter UI for Linux app import, custom actions, action approvals and VDN2 device pairing/revocation |
 | VDN2 pairing/network bridge | Host foundation | One-time pairing, local approval, revocation and TLS service class; no automatic listener startup or Vita client yet |
 | PSVita Direct Node sync | Planned | Folder design documented; no transfer engine |
 | Remote View / Remote Desktop / Extended Display | Planned | Separate product modes; no streaming provider shipped |
