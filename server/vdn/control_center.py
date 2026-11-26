@@ -209,7 +209,7 @@ class ControlCenter:
                    f"Requested permissions: {', '.join(requested) or 'none'}\n\n"
                    "Grant only permissions needed. Enter a comma-separated subset below.")
         grant_text = simpledialog.askstring("Review device permissions", summary,
-                                            initialvalue="node.info", parent=self.window)
+                                            initialvalue=("node.info" if "node.info" in requested else (requested[0] if requested else "")), parent=self.window)
         if grant_text is None:
             return
         granted = [item.strip() for item in grant_text.split(",") if item.strip()]
