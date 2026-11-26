@@ -4,6 +4,7 @@ import tempfile
 import unittest
 import uuid
 from pathlib import Path
+from unittest.mock import patch
 
 from vdn.security.pairing import PairingError, PairingStore
 
@@ -82,6 +83,28 @@ class PairingStoreTests(unittest.TestCase):
         with self.assertRaisesRegex(PairingError, "not paired"):
             self.store.authenticate(device_id=self.device_id, credential=credential,
                                     required_permission="node.info")
+
+
+    def test_expired_device_credential_is_rejected(self):
+        request_id = self._pending()
+        result = self.store.approve_request(request_id)
+        with patch("vdn.security.pairing.time.time", return_value=result["expires_at"] + 1):
+            with self.assertRaisesRegex(PairingError, "expired"):
+                self.store.authenticate(device_id=self.device_id,
+                                        credential=result["credential"],
+                                        required_permission="node.info")
+
+    def test_invalid_device_identity_and_permission_shapes_are_rejected(self):
+        with self.assertRaisesRegex(PairingError, "UUID"):
+            self.store.request_pairing(
+                code="anything", device_id="not-a-uuid", device_name="Vita",
+                requested_permissions=["node.info"],
+            )
+        with self.assertRaisesRegex(PairingError, "permissions"):
+            self.store.request_pairing(
+                code="anything", device_id=self.device_id, device_name="Vita",
+                requested_permissions="node.info",
+            )
 
     def test_credentials_survive_restart_but_plaintext_does_not(self):
         request_id = self._pending()
