@@ -10,6 +10,7 @@ from tkinter import messagebox, simpledialog, ttk
 
 from vdn.action_manager import ActionError, ActionManager
 from vdn.config import AppPaths
+from vdn.security.pairing import PairingError, PairingStore
 
 try:
     from vdn.app_catalog import scan_linux_applications
@@ -40,6 +41,7 @@ class ControlCenter:
         self.window.minsize(720, 460)
         self.paths = AppPaths.discover()
         self.manager = ActionManager(self.paths.state / "actions")
+        self.pairing = PairingStore(self.paths.state / "security")
         self._build()
         self.refresh()
         self.window.transient(parent)
@@ -56,8 +58,10 @@ class ControlCenter:
         self.tabs.pack(fill="both", expand=True, pady=(12, 8))
         self.actions_tab = ttk.Frame(self.tabs, padding=8)
         self.audit_tab = ttk.Frame(self.tabs, padding=8)
+        self.pairing_tab = ttk.Frame(self.tabs, padding=8)
         self.tabs.add(self.actions_tab, text="Applications & Actions")
         self.tabs.add(self.audit_tab, text="Activity Log")
+        self.tabs.add(self.pairing_tab, text="Paired Devices")
 
         toolbar = ttk.Frame(self.actions_tab)
         toolbar.pack(fill="x", pady=(0, 8))
@@ -101,6 +105,38 @@ class ControlCenter:
         self.audit_text = tk.Text(self.audit_tab, height=20, wrap="none", state="disabled",
                                   font=("TkFixedFont", 9))
         self.audit_text.pack(fill="both", expand=True, pady=(8, 0))
+
+        pair_toolbar = ttk.Frame(self.pairing_tab)
+        pair_toolbar.pack(fill="x", pady=(0, 8))
+        ttk.Button(pair_toolbar, text="Open pairing window…", command=self.open_pairing).pack(side="left")
+        ttk.Button(pair_toolbar, text="Refresh", command=self.refresh_pairing).pack(side="left", padx=6)
+        pair_help = ("Pairing requests do not grant access. Review each device locally, "
+                     "grant only the permissions it needs, and revoke devices here.")
+        ttk.Label(self.pairing_tab, text=pair_help, wraplength=820, foreground="#555").pack(anchor="w", pady=(0, 8))
+
+        ttk.Label(self.pairing_tab, text="Pending requests", font=("TkDefaultFont", 10, "bold")).pack(anchor="w")
+        pending_frame = ttk.Frame(self.pairing_tab)
+        pending_frame.pack(fill="both", expand=True, pady=(4, 8))
+        self.pending_tree = ttk.Treeview(pending_frame, columns=("device", "permissions", "created"),
+                                         show="headings", height=5, selectmode="browse")
+        for key, title, width in (("device", "Device", 220), ("permissions", "Requested permissions", 420),
+                                  ("created", "Requested at", 150)):
+            self.pending_tree.heading(key, text=title)
+            self.pending_tree.column(key, width=width, anchor="w")
+        self.pending_tree.pack(fill="both", expand=True)
+        ttk.Button(self.pairing_tab, text="Review + approve selected…",
+                   command=self.approve_pairing).pack(anchor="w", pady=(0, 10))
+
+        ttk.Label(self.pairing_tab, text="Paired devices", font=("TkDefaultFont", 10, "bold")).pack(anchor="w")
+        self.devices_tree = ttk.Treeview(self.pairing_tab, columns=("device", "permissions", "expiry", "state"),
+                                         show="headings", height=5, selectmode="browse")
+        for key, title, width in (("device", "Device", 220), ("permissions", "Granted permissions", 380),
+                                  ("expiry", "Expires", 140), ("state", "State", 90)):
+            self.devices_tree.heading(key, text=title)
+            self.devices_tree.column(key, width=width, anchor="w")
+        self.devices_tree.pack(fill="both", expand=True, pady=(4, 6))
+        ttk.Button(self.pairing_tab, text="Revoke selected device",
+                   command=self.revoke_device).pack(anchor="w")
         self.status = ttk.Label(outer, text="Ready", anchor="w")
         self.status.pack(fill="x")
 
@@ -125,6 +161,85 @@ class ControlCenter:
                                      state, confirmation))
         self.status.configure(text=f"{len(self.tree.get_children())} registered action(s) · local host only")
         self.refresh_audit()
+        self.refresh_pairing()
+
+    def open_pairing(self):
+        try:
+            window = self.pairing.open_pairing_window(ttl=180)
+            messagebox.showinfo(
+                "VDN2 pairing window",
+                "A one-time pairing code is active for 3 minutes. Share it only with the Vita you are pairing.\\n\\n"
+                f"{window['code']}\\n\\n"
+                "The code is shown once and is not stored in plaintext. The device will remain pending until you approve it here.",
+                parent=self.window,
+            )
+            self.refresh_pairing()
+        except PairingError as exc:
+            messagebox.showerror("Pairing unavailable", str(exc), parent=self.window)
+
+    def refresh_pairing(self):
+        if not hasattr(self, "pending_tree"):
+            return
+        for tree in (self.pending_tree, self.devices_tree):
+            for item in tree.get_children():
+                tree.delete(item)
+        for item in self.pairing.pending_requests():
+            requested = ", ".join(item["requested_permissions"])
+            self.pending_tree.insert("", "end", iid=item["request_id"],
+                                     values=(item["device_name"], requested, str(item["created_at"])))
+        for item in self.pairing.paired_devices():
+            state = "Revoked" if item["revoked"] else "Active"
+            self.devices_tree.insert("", "end", iid=item["device_id"],
+                                     values=(item["device_name"], ", ".join(item["permissions"]),
+                                             str(item["expires_at"]), state))
+
+    def approve_pairing(self):
+        selected = self.pending_tree.selection()
+        if not selected:
+            messagebox.showinfo("Pairing", "Select a pending device request first.", parent=self.window)
+            return
+        request_id = selected[0]
+        request = next((item for item in self.pairing.pending_requests()
+                        if item["request_id"] == request_id), None)
+        if request is None:
+            self.refresh_pairing()
+            return
+        requested = request["requested_permissions"]
+        summary = (f"Device: {request['device_name']}\\nID: {request['device_id']}\\n\\n"
+                   f"Requested permissions: {', '.join(requested) or 'none'}\\n\\n"
+                   "Grant only permissions needed. Enter a comma-separated subset below.")
+        grant_text = simpledialog.askstring("Review device permissions", summary,
+                                            initialvalue="node.info", parent=self.window)
+        if grant_text is None:
+            return
+        granted = [item.strip() for item in grant_text.split(",") if item.strip()]
+        try:
+            result = self.pairing.approve_request(request_id, permissions=granted)
+            messagebox.showinfo(
+                "Device paired",
+                f"{result['device_name'] if 'device_name' in result else request['device_name']} is now paired.\\n\\n"
+                f"Device credential (shown once):\\n{result['credential']}\\n\\n"
+                "Store it only on the paired Vita. It will not be shown again.",
+                parent=self.window,
+            )
+            self.refresh_pairing()
+        except PairingError as exc:
+            messagebox.showerror("Approval failed", str(exc), parent=self.window)
+
+    def revoke_device(self):
+        selected = self.devices_tree.selection()
+        if not selected:
+            messagebox.showinfo("Pairing", "Select a paired device first.", parent=self.window)
+            return
+        device_id = selected[0]
+        if not messagebox.askyesno("Revoke device", f"Revoke access for {device_id}?", parent=self.window):
+            return
+        try:
+            self.pairing.revoke_device(device_id)
+            self.refresh_pairing()
+            self.status.configure(text=f"Device access revoked: {device_id}")
+        except PairingError as exc:
+            messagebox.showerror("Revocation failed", str(exc), parent=self.window)
 
     def scan(self):
         if not sys.platform.startswith("linux") or scan_linux_applications is None:
