@@ -32,6 +32,7 @@ NoDisplay=true
             self.assertEqual([app.name for app in apps], ["Example Browser"])
             public = apps[0].public_dict()
             self.assertEqual(public["icon"], "firefox")
+            self.assertEqual(apps[0].launch_argv, ("firefox", "--new-window"))
             self.assertNotIn("Exec", public)
             self.assertNotIn("argv", public)
             self.assertTrue(str(public["action_id"]).startswith("linux.desktop."))
