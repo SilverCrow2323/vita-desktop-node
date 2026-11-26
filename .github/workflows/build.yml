@@ -81,10 +81,16 @@ jobs:
           cmake --build build --parallel 2
       - name: Verify VPK structure and identity
         run: python3 vita/tools/verify_vpk.py vita/build/VitaDesktopNode.vpk
+      - name: Prepare verified VPK handoff
+        run: |
+          mkdir -p dist
+          cp vita/build/VitaDesktopNode.vpk dist/VitaDesktopNode-0.1.0-alpha.2.vpk
+          sha256sum dist/VitaDesktopNode-0.1.0-alpha.2.vpk > dist/VitaDesktopNode-0.1.0-alpha.2.vpk.sha256
+          python3 vita/tools/verify_vpk.py dist/VitaDesktopNode-0.1.0-alpha.2.vpk > dist/VitaDesktopNode-0.1.0-alpha.2-build.txt
       - uses: actions/upload-artifact@v7
         with:
-          name: VitaDesktopNode-VPK
-          path: vita/build/VitaDesktopNode.vpk
+          name: VitaDesktopNode-VPK-alpha.2
+          path: dist/VitaDesktopNode-0.1.0-alpha.2*
           if-no-files-found: error
           retention-days: 30
 
