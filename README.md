@@ -30,6 +30,17 @@ Design documents:
 
 These documents define the target architecture. Remote terminal, file transfer, mesh networking, video streaming and virtual-display management are not yet implemented.
 
+
+### Host-core development smoke test
+
+From the repository root, run the current host-core information command and unit tests:
+
+```sh
+PYTHONPATH=server python -m vdn.app --print-info
+PYTHONPATH=server python -m unittest discover -s server/tests/vdn -v
+```
+
+The node report deliberately marks pairing, PTY, file transfer, mesh networking and both display modes as unavailable until their implementations exist.
 ## Features
 
 - **CPU:** total load, a bar per thread, temperature and the CPU model name.
