@@ -176,6 +176,17 @@ class ControlCenter:
         if not action_id:
             return
         try:
+            details = self.manager.local_details(action_id)
+            command_preview = shlex.join(details.get("argv") or [])
+            approved = messagebox.askyesno(
+                "Review and approve action",
+                f"Approve '{details['name']}' and enable it on this PC?\\n\\n"
+                f"Executable and arguments:\\n{command_preview}\\n\\n"
+                "This command remains stored on this PC. Each launch will still require confirmation.",
+                parent=self.window,
+            )
+            if not approved:
+                return
             self.manager.approve(action_id, enabled=True)
             self.refresh()
             self.status.configure(text=f"Approved and enabled: {action_id}")
