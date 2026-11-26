@@ -43,14 +43,20 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(first, second)
             self.assertEqual(len(first), 36)
 
-    def test_unimplemented_features_are_not_advertised(self):
+    def test_capability_report_is_truthful(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             paths = AppPaths(root / "config", root / "state", root / "cache", root / "logs")
             info = build_node_info(paths)
-            self.assertTrue(info["capabilities"]["vdn2.framing"])
-            self.assertFalse(info["capabilities"]["terminal.pty"])
-            self.assertFalse(info["capabilities"]["display.extended"])
+            caps = info["capabilities"]
+            self.assertTrue(caps["vdn2.framing"])
+            self.assertTrue(caps["catalog.linux_desktop_scan"])
+            self.assertTrue(caps["actions.custom_proposals"])
+            self.assertFalse(caps["actions.execution"])
+            self.assertFalse(caps["terminal.pty"])
+            self.assertFalse(caps["display.remote_view"])
+            self.assertFalse(caps["display.remote_desktop"])
+            self.assertFalse(caps["display.extended"])
 
 
 if __name__ == "__main__":
