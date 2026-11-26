@@ -53,9 +53,13 @@ class ActionManager:
         aid=str(app.action_id)
         if not _ID.fullmatch(aid): raise ActionError("invalid action ID")
         argv=self._argv(app.launch_argv)
+        previous = self._actions.get(aid, {})
+        unchanged = previous.get("argv") == argv
         return self._store({"action_id":aid,"name":str(app.name)[:120],"categories":list(app.categories),
             "icon":app.icon,"platform":getattr(app,"platform","unknown"),"argv":argv,
-            "enabled":False,"approved":False,"requires_confirmation":True,"origin":"desktop-catalog","updated_at":int(time.time())})
+            "enabled":bool(previous.get("enabled")) if unchanged else False,
+            "approved":bool(previous.get("approved")) if unchanged else False,
+            "requires_confirmation":True,"origin":"desktop-catalog","updated_at":int(time.time())})
 
     def add_custom_action(self, *, action_id, name, argv, categories=None, requires_confirmation=True):
         if not _ID.fullmatch(action_id): raise ActionError("invalid action ID")
