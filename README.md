@@ -22,7 +22,7 @@ This fork is evolving into Vita Desktop Node while preserving the original VMON1
 
 - **R2 display scope:** Remote View / mirroring, interactive Remote Desktop, and Extended Display are three distinct modes.
 - **Application Catalog:** Linux desktop-entry discovery is implemented as a metadata-only foundation; the host-side persistent action manager now adds approval-gated launch and audit primitives.
-- **PC Actions:** persistent host actions require local approval and explicit confirmation by default. Launching uses argv with shell disabled; shell and privilege-escalation tools are blocked.
+- **PC Actions:** the Tkinter PC Control Center scans Linux applications, creates custom actions, manages approvals/revocations, runs locally confirmed actions and displays an audit log. Launching uses argv with shell disabled; shell and privilege-escalation tools are blocked.
 - **Integrated networking** targets LAN plus optional Tailscale/WireGuard routing.
 - **Secure terminal** means paired devices, per-device permissions and no implicit root shell.
 
@@ -31,14 +31,14 @@ Design documents:
 - **Add-on architecture:** [modular add-on contract](docs/ADDON_SYSTEM.md).
 - **PSVita Direct Node:** [folder layout and synchronization behavior](docs/PSVITA_DIRECT_NODE_SYNC.md).
 - **Vita client preview:** [VPK identity, included features, installation and limitations](docs/VITA_CLIENT_PREVIEW.md). The current Vita binary is still VMON1-compatible telemetry; VDN2 and remote features are not implemented on Vita yet.
-- **Application Catalog and PC Actions:** [Linux menu discovery and Vita-created proposals](docs/APPLICATION_CATALOG.md); [persistent host action manager, approval, execution and audit](docs/HOST_ACTION_MANAGER.md).
+- **Application Catalog and PC Actions:** [Linux menu discovery and Vita-created proposals](docs/APPLICATION_CATALOG.md); [persistent host action manager](docs/HOST_ACTION_MANAGER.md); [PC Control Center guide](docs/PC_CONTROL_CENTER.md).
 - **R2 display scope:** [Remote View, Remote Desktop and Extended Display](docs/R2_DISPLAY_REMOTE.md).
 - **Roadmap:** [release milestones R1–R8](docs/ROADMAP.md).
 - **Release policy:** [one tested feature per milestone release](docs/RELEASE_POLICY.md).
 - [VDN2 protocol and security baseline](docs/VDN2_PROTOCOL.md)
 - [Host architecture and implementation roadmap](docs/ARCHITECTURE.md)
 
-The Linux desktop-entry scanner, safe action-proposal validator and host-side approval-gated action execution primitive are implemented. The graphical PC editor, Windows catalog provider, VDN2 catalog transport, Vita catalog UI and remote display/input providers remain planned.
+The Linux desktop-entry scanner, safe action-proposal validator, host-side action manager and local PC Control Center are implemented. Windows catalog discovery, VDN2 catalog transport, Vita catalog UI and remote display/input providers remain planned.
 
 
 ### Host-core development smoke test
