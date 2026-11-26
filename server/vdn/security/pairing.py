@@ -139,9 +139,14 @@ class PairingStore:
                 self._save()
                 raise PairingError("invalid pairing code")
             self._state["pairing"] = None  # one request consumes the code
-            if device_id in self._state["devices"]:
+            existing = self._state["devices"].get(device_id)
+            if isinstance(existing, dict) and not existing.get("revoked"):
                 self._save()
                 raise PairingError("device is already paired; revoke it before pairing again")
+            if any(item.get("device_id") == device_id
+                   for item in self._state["pending"].values()):
+                self._save()
+                raise PairingError("device already has a pending pairing request")
             request_id = str(uuid.uuid4())
             self._state["pending"][request_id] = {
                 "device_id": device_id,
