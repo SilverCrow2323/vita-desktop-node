@@ -75,6 +75,13 @@ class HostService:
 
     async def _client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         task = asyncio.current_task()
+        if len(self._clients) >= MAX_CLIENTS:
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except (ConnectionError, OSError):
+                pass
+            return
         self._clients.add(task)
         try:
             while True:
