@@ -34,13 +34,13 @@ def make_sfo(title_id="VDN000001", title="Vita Desktop Node", app_ver="00.10"):
 
 class VpkVerifierTests(unittest.TestCase):
     def make_vpk(self, path, title_id="VDN000001", omit=None):
-        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
+        with zipfile.ZipFile(path, "w", zipfile.ZIP_STORED) as archive:
             for name in REQUIRED_FILES:
                 if name == omit:
                     continue
                 archive.writestr(
                     name,
-                    make_sfo(title_id) if name == "sce_sys/param.sfo" else b"asset",
+                    make_sfo(title_id) if name == "sce_sys/param.sfo" else b"x" * 300,
                 )
 
     def test_valid_package_identity(self):
