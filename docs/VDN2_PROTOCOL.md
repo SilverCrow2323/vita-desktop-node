@@ -1,6 +1,6 @@
 # VDN2 — Protocol and Security Baseline
 
-**Status:** host-side framing foundation implemented; authenticated transport, pairing and Vita client support are not implemented.
+**Status:** host-side framing, pairing store, local approval controls and TLS-only read-only service class implemented. Vita TLS/pairing client and automatic listener/certificate integration remain pending.
 
 ## Compatibility boundary
 
@@ -28,20 +28,21 @@ Framing does **not** provide encryption, authentication, pairing, authorization,
 
 Control and data planes are distinct. A future media transport must not weaken control-channel authentication.
 
-## Pairing and identity — not yet implemented
+## Pairing and identity — host-side foundation implemented
 
-Target flow:
+Implemented host-side flow:
 
 1. User explicitly enables pairing on the host.
 2. Host displays a short-lived, single-use pairing code and device identity/fingerprint.
-3. Client submits the code over an authenticated bootstrap channel.
-4. User confirms the requesting device and its displayed identity.
-5. Host issues a per-device credential; credentials are independently revocable.
-6. Reconnects use the stored credential and pinned host identity.
+3. Client submits the code over the TLS control channel using `pairing.request`.
+4. The request remains pending; the one-time code is consumed and grants no access.
+5. The host user reviews the device and grants a subset of its requested permissions in the PC Control Center.
+6. Host issues a random per-device credential once; only its SHA-256 digest is persisted.
+7. Authenticated requests validate credential, expiry, revocation and required permission.
 
 Pairing codes are not reusable session passwords. Use a reviewed TLS implementation and certificate/public-key pinning suitable for the Vita runtime. Do not invent cryptography. Never log pairing secrets or send them over plaintext discovery.
 
-## Authorization — target policy
+## Authorization — host-side foundation
 
 Default deny. Permissions are granted per paired device, for example: `telemetry.read`, `node.info`, `process.read`, `notification.send`, `files.list`, `files.read`, `files.write`, `files.delete`, `terminal.open`, `terminal.execute`, `desktop.view`, `desktop.control`, `display.session`, `actions.catalog.read`, `actions.propose`, `actions.invoke`.
 
@@ -51,7 +52,11 @@ File deletion, overwrites, system changes and privilege elevation require fresh 
 
 The local Host Action Manager and PC Control Center provide host-side approval and execution controls. The manager stores executable argv locally, returns metadata-only public action records, requires approval and explicit confirmation, uses `shell=False`, blocks shell/privilege-escalation launchers and records bounded audit events.
 
-There is currently no network endpoint that invokes this manager. Pairing and per-device authorization must be implemented before remote actions can be considered.
+The TLS service exposes only authenticated `node.info` and `node.capabilities` read-only methods. Pairing requests can create pending records but cannot approve themselves. No network endpoint invokes the Host Action Manager; remote actions remain blocked.
+
+## TLS host service boundary
+
+`server/vdn/services/host_service.py` provides a TLS-only asyncio listener (TLS 1.2 minimum, bounded frames, maximum eight concurrent clients). It requires a caller-supplied `ssl.PROTOCOL_TLS_SERVER` context with a configured certificate and private key. The listener is not automatically started by the desktop application yet. The Vita client must pin/validate the host certificate before sending a pairing code or credential.
 
 ## Secure terminal — planned
 
@@ -85,9 +90,10 @@ There is currently no network endpoint that invokes this manager. Pairing and pe
 
 ## Implementation order
 
-1. Framing, schema validation and capability handshake. (Framing implemented; handshake pending.)
-2. Host identity, pairing, credential storage and revocation.
-3. Permission checks and audit events at the transport boundary.
+1. Framing and envelope validation. (Implemented.)
+2. Host pairing store, local approval, credential hashing and revocation. (Host-side implemented.)
+3. TLS-only read-only host service and per-request authorization. (Service class implemented; automatic startup/certificate lifecycle pending.)
+4. Vita-side TLS pinning, pairing UI and credential storage.
 4. Read-only node information and process inventory.
 5. Secure PTY service.
 6. Sandboxed file service, then LAN/mesh routing.
