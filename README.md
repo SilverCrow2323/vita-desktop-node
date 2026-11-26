@@ -20,7 +20,9 @@ CPU, GPU, temperatures, RAM, network and disk on the Vita's screen, updated ever
 
 This fork is evolving into Vita Desktop Node while preserving the original VMON1 Vita telemetry path.
 
-- **Remote View + Extended Display** are separate planned capabilities; mirroring is not presented as a second monitor.
+- **R2 display scope:** Remote View / mirroring, interactive Remote Desktop, and Extended Display are three distinct modes.
+- **Application Catalog:** Linux desktop-entry discovery is implemented as a metadata-only foundation; the PC and Vita will share one normalized catalog.
+- **PC Actions:** custom actions proposed from the Vita require explicit host approval; arbitrary remote shell execution is not allowed.
 - **Integrated networking** targets LAN plus optional Tailscale/WireGuard routing.
 - **Secure terminal** means paired devices, per-device permissions and no implicit root shell.
 
@@ -28,11 +30,14 @@ Design documents:
 - **Linux host port:** initial MX Linux/XFCE integration and Debian package instructions are in [Linux installation](docs/LINUX_INSTALL.md).
 - **Add-on architecture:** [modular add-on contract](docs/ADDON_SYSTEM.md).
 - **PSVita Direct Node:** [folder layout and synchronization behavior](docs/PSVITA_DIRECT_NODE_SYNC.md).
+- **Application Catalog and PC Actions:** [Linux menu discovery, Vita-created action proposals and approval model](docs/APPLICATION_CATALOG.md).
+- **R2 display scope:** [Remote View, Remote Desktop and Extended Display](docs/R2_DISPLAY_REMOTE.md).
+- **Roadmap:** [release milestones R1–R8](docs/ROADMAP.md).
 - **Release policy:** [one tested feature per milestone release](docs/RELEASE_POLICY.md).
 - [VDN2 protocol and security baseline](docs/VDN2_PROTOCOL.md)
 - [Host architecture and implementation roadmap](docs/ARCHITECTURE.md)
 
-These documents define the target architecture. Remote terminal, file transfer, mesh networking, video streaming and virtual-display management are not yet implemented.
+The Linux desktop-entry scanner and safe action-proposal validator are implemented. The PC editor, Windows catalog provider, VDN2 catalog transport, Vita catalog UI, action execution, remote video, remote input and virtual-display providers remain planned.
 
 
 ### Host-core development smoke test
