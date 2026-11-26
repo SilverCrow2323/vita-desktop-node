@@ -222,13 +222,11 @@ class ControlCenter:
                 parent=self.window,
             ):
                 return
-            self.status.configure(text=f"Launching {action['name']}…")
+            self.status.configure(text=f"Starting {action['name']}…")
             def worker():
                 try:
-                    result = self.manager.run(action_id, confirmed=True)
-                    detail = f"Finished with exit code {result.get('returncode')}"
-                    if result.get("timeout"):
-                        detail = "Launch timed out."
+                    result = self.manager.launch(action_id, confirmed=True)
+                    detail = f"Started successfully · PID {result['pid']}"
                     self.window.after(0, lambda: self.status.configure(text=f"{action['name']}: {detail}"))
                     self.window.after(0, self.refresh_audit)
                 except Exception as exc:
