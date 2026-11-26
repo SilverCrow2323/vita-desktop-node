@@ -6,6 +6,7 @@ import argparse
 import struct
 import sys
 import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 EXPECTED_TITLE_ID = "VDN000001"
@@ -53,10 +54,29 @@ def verify_vpk(path: Path) -> dict[str, str]:
     if not zipfile.is_zipfile(path):
         raise ValueError("VPK is not a valid ZIP-compatible package")
     with zipfile.ZipFile(path) as archive:
-        names = set(archive.namelist())
+        entries = archive.namelist()
+        names = set(entries)
+        if len(entries) != len(names):
+            raise ValueError("VPK contains duplicate archive entries")
+        corrupt = archive.testzip()
+        if corrupt is not None:
+            raise ValueError(f"VPK CRC check failed for {corrupt}")
         missing = [name for name in REQUIRED_FILES if name not in names]
         if missing:
             raise ValueError("missing package entries: " + ", ".join(missing))
+        for image_name in (
+            "sce_sys/icon0.png",
+            "sce_sys/livearea/contents/bg.png",
+            "sce_sys/livearea/contents/startup.png",
+        ):
+            if not archive.read(image_name).startswith(b"\\x89PNG\\r\\n\\x1a\\n"):
+                raise ValueError(f"invalid PNG signature: {image_name}")
+        try:
+            root = ET.fromstring(archive.read("sce_sys/livearea/contents/template.xml"))
+        except ET.ParseError as exc:
+            raise ValueError(f"invalid LiveArea template XML: {exc}") from exc
+        if root.tag != "livearea":
+            raise ValueError("LiveArea template root element must be <livearea>")
         info = parse_sfo(archive.read("sce_sys/param.sfo"))
         if info.get("TITLE_ID") != EXPECTED_TITLE_ID:
             raise ValueError(f"TITLE_ID mismatch: {info.get('TITLE_ID')!r}")
