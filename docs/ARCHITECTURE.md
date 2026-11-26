@@ -84,3 +84,7 @@ A compressed copy of the primary desktop is Remote View, not Extended Display.
 
 ## Immediate engineering task
 Implement M1/M2 without rewriting the legacy GUI or changing the Vita VMON1 parser. Establish the server/vdn package and tests first; add Linux packaging after the new host entry point can start and stop cleanly.
+
+## Implementation status (foundation branch)
+
+The initial host-core skeleton now includes XDG/Windows path discovery, atomic per-user JSON configuration writes, a persistent non-secret node identifier, a local capability report and a CLI entry point. VDN2 framing and its unit tests are also present. Pairing, network listeners, PTY, file service, media and virtual-display providers remain unimplemented.
