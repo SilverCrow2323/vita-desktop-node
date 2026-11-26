@@ -189,6 +189,14 @@ class ActionManager:
             self._save()
         self._audit("revoked", action_id)
 
+    def local_details(self, action_id):
+        """Return full action details for a trusted local UI; never use for network payloads."""
+        with self._lock:
+            item = self._actions.get(action_id)
+            if item is None:
+                raise ActionError("unknown action")
+            return dict(item, argv=list(item.get("argv", [])))
+
     def public_action(self, action_id):
         with self._lock:
             item = self._actions.get(action_id)
