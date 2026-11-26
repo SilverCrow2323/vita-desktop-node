@@ -46,7 +46,7 @@ Included foundations:
 - Built-in add-on API, registry and lifecycle manager.
 - Linux XDG application discovery.
 - Persistent host-side action storage, explicit approval, confirmation before execution and bounded audit log.
-- PC Control Center for local application/action management and VDN2 device pairing/revocation, including command review before approval.
+- PC Control Center for local application/action management, including command review before approval.
 - Desktop application launch returns immediately with a process ID instead of waiting for the GUI app to close.
 - Vita VPK identity and verification tooling, while retaining VMON1 compatibility.
 
