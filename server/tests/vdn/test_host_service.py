@@ -46,10 +46,11 @@ class HostServiceTests(unittest.TestCase):
         self.assertEqual(result["result"]["authenticated_device"], self.device_id)
 
     def test_capabilities_are_read_only_and_actions_not_exposed(self):
-        result = self.service.dispatch(self._request("node.capabilities", {"auth": self._auth()}))
+        auth = self._auth()
+        result = self.service.dispatch(self._request("node.capabilities", {"auth": auth}))
         self.assertTrue(result["ok"])
         self.assertFalse(result["result"]["capabilities"]["actions.execution"])
-        denied = self.service.dispatch(self._request("actions.invoke", {"auth": self._auth()}))
+        denied = self.service.dispatch(self._request("actions.invoke", {"auth": auth}))
         self.assertFalse(denied["ok"])
         self.assertEqual(denied["error"]["code"], "method_not_found")
 
