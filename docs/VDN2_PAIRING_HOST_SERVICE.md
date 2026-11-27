@@ -13,7 +13,7 @@
 7. The host returns a random device credential once. Only its SHA-256 digest is persisted.
 8. Each later request authenticates the device, checks credential expiry, revocation and method permission.
 
-The pairing code and device credential are never written to the pairing store. The pairing store is atomically replaced and restricted to owner-only permissions on POSIX systems.
+The pairing code and device credential are never written to the pairing store. The pairing store is atomically replaced and restricted to owner-only permissions on POSIX systems. The state directory and store file are rejected if they are symlinks, including checks before load and save; an existing store file is restricted to owner-only permissions.
 
 ## Permission model
 
@@ -50,3 +50,6 @@ PYTHONPATH=server python -m unittest discover -s server/tests/vdn -v
 ```
 
 Tests cover one-time code consumption, invalid-code lockout, pending approval, permission subset enforcement, secret hashing, restart persistence, credential revocation, authenticated read-only methods and denial of remote action invocation.
+
+
+The symlink checks protect the configured state directory and pairing file from accidental or pre-planted path redirection. They are not a substitute for OS-level ownership and permission controls, and do not claim protection against a privileged process racing filesystem operations.
