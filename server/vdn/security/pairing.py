@@ -37,12 +37,24 @@ class PairingStore:
         self.path = self.state_dir / "paired-devices.json"
         self.credential_ttl = max(300, int(credential_ttl))
         self._lock = threading.RLock()
+        if self.state_dir.is_symlink():
+            raise PairingError("pairing state directory must not be a symlink")
         self.state_dir.mkdir(parents=True, exist_ok=True)
+        if self.state_dir.is_symlink() or not self.state_dir.is_dir():
+            raise PairingError("pairing state directory must be a real directory")
+        if self.path.is_symlink():
+            raise PairingError("pairing store file must not be a symlink")
         if os.name == "posix":
             self.state_dir.chmod(0o700)
+            if self.path.exists():
+                self.path.chmod(0o600)
         self._state = self._load()
 
     def _load(self):
+        if self.state_dir.is_symlink() or not self.state_dir.is_dir():
+            raise PairingError("pairing state directory must be a real directory")
+        if self.path.is_symlink():
+            raise PairingError("pairing store file must not be a symlink")
         try:
             value = json.loads(self.path.read_text(encoding="utf-8"))
         except FileNotFoundError:
@@ -57,6 +69,10 @@ class PairingStore:
         return value
 
     def _save(self):
+        if self.state_dir.is_symlink() or not self.state_dir.is_dir():
+            raise PairingError("pairing state directory must be a real directory")
+        if self.path.is_symlink():
+            raise PairingError("pairing store file must not be a symlink")
         fd, name = tempfile.mkstemp(prefix=".pairing-", dir=self.state_dir)
         try:
             if os.name == "posix":
