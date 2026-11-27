@@ -21,7 +21,7 @@ On a Debian/Ubuntu-based development machine with Python 3 and dpkg tools:
 ```sh
 sudo apt update
 sudo apt install python3 python3-tk python3-psutil python3-pil python3-pystray dpkg-dev
-./packaging/linux/build-deb.sh
+bash packaging/linux/build-deb.sh
 ```
 
 The generated package is placed under `dist/`. Install it with:
