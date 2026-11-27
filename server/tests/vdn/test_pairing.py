@@ -146,5 +146,34 @@ class PairingStoreTests(unittest.TestCase):
                          json.loads(restarted.path.read_text())["devices"][self.device_id]["credential_hash"])
 
 
+    def test_pairing_store_rejects_symlinked_state_directory_without_chmod(self):
+        target = Path(self.tmp.name) / "real-state"
+        target.mkdir()
+        target.chmod(0o755)
+        link = Path(self.tmp.name) / "state-link"
+        link.symlink_to(target, target_is_directory=True)
+        with self.assertRaisesRegex(PairingError, "directory must not be a symlink"):
+            PairingStore(link)
+        self.assertEqual(target.stat().st_mode & 0o777, 0o755)
+
+    def test_pairing_store_rejects_symlinked_store_file(self):
+        state = Path(self.tmp.name) / "linked-file-state"
+        state.mkdir()
+        outside = Path(self.tmp.name) / "outside.json"
+        outside.write_text('{"pairing":null,"pending":{},"devices":{}}', encoding="utf-8")
+        (state / "paired-devices.json").symlink_to(outside)
+        with self.assertRaisesRegex(PairingError, "store file must not be a symlink"):
+            PairingStore(state)
+        self.assertTrue(outside.is_file())
+
+    def test_save_refuses_store_file_replaced_with_symlink(self):
+        self.store.path.unlink(missing_ok=True)
+        outside = Path(self.tmp.name) / "outside-store.json"
+        outside.write_text("KEEP OUTSIDE", encoding="utf-8")
+        self.store.path.symlink_to(outside)
+        with self.assertRaisesRegex(PairingError, "store file must not be a symlink"):
+            self.store.open_pairing_window()
+        self.assertEqual(outside.read_text(encoding="utf-8"), "KEEP OUTSIDE")
+
 if __name__ == "__main__":
     unittest.main()
