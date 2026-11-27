@@ -74,7 +74,7 @@ On MX Linux, Debian or Ubuntu, install the build dependencies:
 
 ```sh
 sudo apt install python3 python3-tk python3-psutil python3-pil python3-pystray dpkg-dev
-./packaging/linux/build-deb.sh
+bash packaging/linux/build-deb.sh
 ```
 
 The package is written to `dist/`. For full installation, build details and current limitations, see [Linux installation](docs/LINUX_INSTALL.md).
