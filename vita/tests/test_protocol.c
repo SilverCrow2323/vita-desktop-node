@@ -12,7 +12,7 @@ static int failures = 0;
 #define CHECK(cond)                                                       \
     do {                                                                  \
         if (!(cond)) {                                                    \
-            printf("FALLA %s:%d: %s\\n", __FILE__, __LINE__, #cond);     \
+            printf("FALLA %s:%d: %s\n", __FILE__, __LINE__, #cond);     \
             failures++;                                                   \
         }                                                                 \
     } while (0)
@@ -24,7 +24,7 @@ static void test_valid(void)
     const char *line =
         "VMON1;host=DESKTOP-PC;cpu=23.4;cores=12,30,8,5,40,22,11,9,3,7,15,20;ctemp=54.0;"
         "ram=55.1;ramu=8.8;ramt=16.0;gpu=12;gtemp=60;vramu=1.2;vramt=8.0;gclk=1500;"
-        "up=123.4;down=456.7;disk=40.2;ts=1731258000\\r\\n";
+        "up=123.4;down=456.7;disk=40.2;ts=1731258000\r\n";
     CHECK(vmon_parse(line, &s) == 0);
     CHECK(!strcmp(s.host, "DESKTOP-PC"));
     CHECK(FEQ(s.cpu, 23.4));
@@ -44,7 +44,7 @@ static void test_names(void)
     CHECK(vmon_parse("VMON1;host=PC;cpun=Ryzen 5 5600G;gpun=RTX 3050;cpu=1", &s) == 0);
     CHECK(!strcmp(s.cpu_name, "Ryzen 5 5600G") && !strcmp(s.gpu_name, "RTX 3050"));
     CHECK(vmon_parse("VMON1;host=PC;cpu=1", &s) == 0); /* servidor viejo: sin nombres */
-    CHECK(s.cpu_name[0] == '\\0' && s.gpu_name[0] == '\\0');
+    CHECK(s.cpu_name[0] == '\0' && s.gpu_name[0] == '\0');
     CHECK(s.fps == -1.0f); /* servidor viejo: sin FPS */
     CHECK(vmon_parse("VMON1;cpu=1;fps=143.6", &s) == 0);
     CHECK(FEQ(s.fps, 143.6));
@@ -96,7 +96,7 @@ static void test_truncated(void)
         char big[VMON_MAX_LINE + 10];
         memset(big, 'a', sizeof(big));
         memcpy(big, "VMON1;", 6);
-        big[sizeof(big) - 1] = '\\0';
+        big[sizeof(big) - 1] = '\0';
         CHECK(vmon_parse(big, &s) != 0);
     }
 }
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
     if (argc > 1) {
         VmonStats s;
         int r = vmon_parse(argv[1], &s);
-        printf("%s host=%s cpu=%.1f ncores=%d ram=%.1f gpu=%.1f\\n", r ? "INVALIDA" : "OK", s.host, s.cpu,
+        printf("%s host=%s cpu=%.1f ncores=%d ram=%.1f gpu=%.1f\n", r ? "INVALIDA" : "OK", s.host, s.cpu,
                s.ncores, s.ram, s.gpu);
         return r ? 1 : 0;
     }
@@ -177,9 +177,9 @@ int main(int argc, char **argv)
     test_timestamp_validation();
     test_null_output();
     if (failures) {
-        printf("%d fallas\\n", failures);
+        printf("%d fallas\n", failures);
         return 1;
     }
-    printf("Todos los tests pasaron\\n");
+    printf("Todos los tests pasaron\n");
     return 0;
 }
