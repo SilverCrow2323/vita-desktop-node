@@ -4,6 +4,7 @@ import unittest
 from vdn.protocol.framing import (
     FrameError,
     decode_frame,
+    decode_payload,
     encode_frame,
     read_frame,
     write_frame,
@@ -55,6 +56,17 @@ class FramingTests(unittest.TestCase):
             decode_frame(frame[:-1])
         with self.assertRaises(FrameError):
             decode_frame(frame + b"x")
+
+    def test_rejects_non_standard_json_numeric_constants(self):
+        for constant in (b"NaN", b"Infinity", b"-Infinity"):
+            with self.subTest(constant=constant):
+                payload = (
+                    b'{"protocol":"VDN2","version":2,"type":"request",'
+                    b'"id":"test-1","method":"node.capabilities",'
+                    b'"params":{"value":' + constant + b'}}'
+                )
+                with self.assertRaises(FrameError):
+                    decode_payload(payload)
 
     def test_rejects_zero_length(self):
         with self.assertRaises(FrameError):
