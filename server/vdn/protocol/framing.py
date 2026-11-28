@@ -72,12 +72,17 @@ def encode_frame(message: dict[str, Any], *, max_frame: int = DEFAULT_MAX_FRAME)
     return _HEADER.pack(len(payload)) + payload
 
 
+def _reject_non_json_constant(value: str) -> None:
+    """Reject JavaScript-style NaN/Infinity tokens that are not valid JSON."""
+    raise FrameError(f"non-standard JSON numeric constant: {value}")
+
+
 def decode_payload(payload: bytes, *, max_frame: int = DEFAULT_MAX_FRAME) -> dict[str, Any]:
     """Decode and validate a JSON payload after its length header has been removed."""
     if not payload or len(payload) > max_frame:
         raise FrameError("frame size outside permitted bounds")
     try:
-        message = json.loads(payload.decode("utf-8"))
+        message = json.loads(payload.decode("utf-8"), parse_constant=_reject_non_json_constant)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise FrameError("invalid UTF-8 JSON payload") from exc
     return validate_envelope(message)
