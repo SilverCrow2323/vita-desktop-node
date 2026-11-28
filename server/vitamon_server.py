@@ -316,7 +316,7 @@ def _protocol_token(value, limit=40):
     """Keep text fields printable ASCII and prevent delimiter/control injection."""
     text = str(value or "")
     safe = "".join(
-        char if 32 <= ord(char) < 127 and char not in ";=" else "-"
+        char if 32 <= ord(char) < 127 and char not in ";=\\" else "-"
         for char in text
     )
     return safe[:limit]
