@@ -1,11 +1,14 @@
 #include "protocol.h"
 
+#include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
 void vmon_stats_reset(VmonStats *s)
 {
+    if (!s)
+        return;
     memset(s, 0, sizeof(*s));
     s->cpu = s->ctemp = s->ram = s->ramu = s->ramt = -1.0f;
     s->gpu = s->gtemp = s->vramu = s->vramt = s->gclk = -1.0f;
@@ -13,15 +16,27 @@ void vmon_stats_reset(VmonStats *s)
     s->ts = -1.0;
 }
 
-/* Número vacío o con basura => -1 (no disponible). */
+/* Un número vacío, incompleto o no finito => -1 (no disponible). */
 static float parse_num(const char *v)
 {
     char *end;
     float f;
-    if (!*v)
+    if (!v || !*v)
         return -1.0f;
     f = strtof(v, &end);
-    return (end == v || *end) ? -1.0f : f;
+    return (end == v || *end || !isfinite(f)) ? -1.0f : f;
+}
+
+/* El timestamp también debe consumir todo el campo y ser finito/no negativo. */
+static double parse_timestamp(const char *v)
+{
+    char *end;
+    double value;
+    if (!v || !*v)
+        return -1.0;
+    value = strtod(v, &end);
+    return (end == v || *end || !isfinite(value) || value < 0.0)
+        ? -1.0 : value;
 }
 
 static void parse_cores(char *v, VmonStats *s)
@@ -45,7 +60,7 @@ int vmon_parse(const char *line, VmonStats *out)
     char *p;
     VmonStats s;
 
-    if (!line || strncmp(line, VMON_PREFIX, sizeof(VMON_PREFIX) - 1) != 0)
+    if (!line || !out || strncmp(line, VMON_PREFIX, sizeof(VMON_PREFIX) - 1) != 0)
         return -1;
     len = strlen(line);
     if (len >= sizeof(buf))
@@ -74,7 +89,7 @@ int vmon_parse(const char *line, VmonStats *out)
             } else if (!strcmp(k, "cores")) {
                 parse_cores(v, &s);
             } else if (!strcmp(k, "ts")) {
-                s.ts = strtod(v, NULL);
+                s.ts = parse_timestamp(v);
             } else {
                 static const struct { const char *k; size_t off; } keys[] = {
                     {"cpu", offsetof(VmonStats, cpu)},     {"ctemp", offsetof(VmonStats, ctemp)},
@@ -83,7 +98,7 @@ int vmon_parse(const char *line, VmonStats *out)
                     {"gtemp", offsetof(VmonStats, gtemp)}, {"vramu", offsetof(VmonStats, vramu)},
                     {"vramt", offsetof(VmonStats, vramt)}, {"gclk", offsetof(VmonStats, gclk)},
                     {"up", offsetof(VmonStats, up)},       {"down", offsetof(VmonStats, down)},
-                    {"disk", offsetof(VmonStats, disk)},     {"fps", offsetof(VmonStats, fps)},
+                    {"disk", offsetof(VmonStats, disk)},   {"fps", offsetof(VmonStats, fps)},
                 };
                 size_t i;
                 for (i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
@@ -92,7 +107,7 @@ int vmon_parse(const char *line, VmonStats *out)
                         break;
                     }
                 }
-                /* claves desconocidas: se ignoran */
+                /* Claves desconocidas: se ignoran. */
             }
         }
         if (!semi)

@@ -12,7 +12,7 @@ static int failures = 0;
 #define CHECK(cond)                                                       \
     do {                                                                  \
         if (!(cond)) {                                                    \
-            printf("FALLA %s:%d: %s\n", __FILE__, __LINE__, #cond);       \
+            printf("FALLA %s:%d: %s\n", __FILE__, __LINE__, #cond);     \
             failures++;                                                   \
         }                                                                 \
     } while (0)
@@ -127,6 +127,35 @@ static void test_long_host(void)
     CHECK(strlen(s.host) == VMON_HOST_LEN - 1);
 }
 
+static void test_non_finite_numbers(void)
+{
+    VmonStats s;
+    CHECK(vmon_parse("VMON1;cpu=nan;ram=inf;gpu=-inf;cores=1,nan,3", &s) == 0);
+    CHECK(s.cpu == -1.0f && s.ram == -1.0f && s.gpu == -1.0f);
+    CHECK(s.ncores == 3 && s.cores[1] == -1.0f);
+}
+
+static void test_timestamp_validation(void)
+{
+    VmonStats s;
+    CHECK(vmon_parse("VMON1;cpu=10;ts=1731258000", &s) == 0);
+    CHECK(s.ts == 1731258000.0);
+    CHECK(vmon_parse("VMON1;cpu=10;ts=1731258000oops", &s) == 0);
+    CHECK(s.ts == -1.0);
+    CHECK(vmon_parse("VMON1;cpu=10;ts=nan", &s) == 0);
+    CHECK(s.ts == -1.0);
+    CHECK(vmon_parse("VMON1;cpu=10;ts=inf", &s) == 0);
+    CHECK(s.ts == -1.0);
+    CHECK(vmon_parse("VMON1;cpu=10;ts=-1", &s) == 0);
+    CHECK(s.ts == -1.0);
+}
+
+static void test_null_output(void)
+{
+    CHECK(vmon_parse("VMON1;cpu=1", NULL) != 0);
+    vmon_stats_reset(NULL);
+}
+
 int main(int argc, char **argv)
 {
     if (argc > 1) {
@@ -144,6 +173,9 @@ int main(int argc, char **argv)
     test_truncated();
     test_cores();
     test_long_host();
+    test_non_finite_numbers();
+    test_timestamp_validation();
+    test_null_output();
     if (failures) {
         printf("%d fallas\n", failures);
         return 1;

@@ -67,6 +67,41 @@ def test_fps_in_protocol_line():
     assert ";fps=-1;" in vs.build_line(sample)
 
 
+
+def test_protocol_text_fields_cannot_inject_additional_fields():
+    sample = {"host": "PC;admin=1\\n", "cpun": "CPU;ram=99", "gpun": "GPU=1;mode=evil",
+              "cpu": 1, "cores": [1], "ctemp": -1, "ram": 1, "ramu": 1, "ramt": 2,
+              "gpu": 1, "gtemp": -1, "vramu": -1, "vramt": -1, "gclk": -1, "up": 0,
+              "down": 0, "disk": 0, "ts": 0, "fps": -1}
+    line = vs.build_line(sample)
+    assert ";admin=" not in line
+    assert ";ram=99" not in line
+    assert ";mode=evil" not in line
+    assert "\\n" not in line
+
+
+def test_protocol_line_rejects_oversized_core_lists():
+    sample = {"host": "PC", "cpu": 1, "cores": [100] * 256, "ctemp": -1, "ram": 1,
+              "ramu": 1, "ramt": 2, "gpu": 1, "gtemp": -1, "vramu": -1,
+              "vramt": -1, "gclk": -1, "up": 0, "down": 0, "disk": 0, "ts": 0, "fps": -1}
+    try:
+        vs.build_line(sample)
+    except ValueError as exc:
+        assert "1024-byte limit" in str(exc)
+    else:
+        raise AssertionError("oversized protocol line was accepted")
+
+
+def test_vita_ack_bounds_battery_and_sanitizes_version():
+    ack = vs.parse_ack(b"VMONACK1;ver=1.2;evil=1;batt=250;chg=1", "192.168.1.50")
+    assert ack["batt"] == -1
+    assert ack["ver"] == "1.2"
+
+
+def test_vita_ack_rejects_oversized_datagrams():
+    assert vs.parse_ack(b"VMONACK1;" + b"x" * 600, "192.168.1.50") is None
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
