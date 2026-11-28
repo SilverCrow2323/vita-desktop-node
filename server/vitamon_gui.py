@@ -46,7 +46,10 @@ def resource(name):
 
 
 def config_path():
-    base = os.environ.get("APPDATA") or os.path.expanduser("~")
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA") or os.path.expanduser("~")
+    else:
+        base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
     return os.path.join(base, APP_NAME, "config.json")
 
 
@@ -90,38 +93,93 @@ def login_command():
     return f'"{exe}" "{os.path.abspath(__file__)}" --start --minimized'
 
 
+def _linux_autostart_path():
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
+    return os.path.join(base, "autostart", "vitamon.desktop")
+
+
+def _linux_desktop_exec():
+    import shlex
+    if getattr(sys, "frozen", False):
+        command = [sys.executable, "--start", "--minimized"]
+    else:
+        command = [sys.executable, os.path.abspath(__file__), "--start", "--minimized"]
+    return " ".join(shlex.quote(part) for part in command)
+
+
 def get_run_at_login():
-    if sys.platform != "win32":
-        return False
-    import winreg
-    try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as k:
-            winreg.QueryValueEx(k, APP_NAME)
-            return True
-    except OSError:
-        return False
+    if sys.platform == "win32":
+        import winreg
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as k:
+                winreg.QueryValueEx(k, APP_NAME)
+                return True
+        except OSError:
+            return False
+    if sys.platform.startswith("linux"):
+        return os.path.isfile(_linux_autostart_path())
+    return False
 
 
 def set_run_at_login(enabled):
-    import winreg
-    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as k:
+    if sys.platform == "win32":
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as k:
+            if enabled:
+                winreg.SetValueEx(k, APP_NAME, 0, winreg.REG_SZ, login_command())
+            else:
+                try:
+                    winreg.DeleteValue(k, APP_NAME)
+                except FileNotFoundError:
+                    pass
+        return
+    if sys.platform.startswith("linux"):
+        path = _linux_autostart_path()
         if enabled:
-            winreg.SetValueEx(k, APP_NAME, 0, winreg.REG_SZ, login_command())
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            content = (
+                "[Desktop Entry]\n"
+                "Type=Application\n"
+                "Name=VitaMon\n"
+                "Comment=Send PC hardware statistics to PlayStation Vita\n"
+                f"Exec={_linux_desktop_exec()}\n"
+                "Terminal=false\n"
+                "X-GNOME-Autostart-enabled=true\n"
+            )
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(content)
+            os.chmod(path, 0o600)
         else:
             try:
-                winreg.DeleteValue(k, APP_NAME)
+                os.unlink(path)
             except FileNotFoundError:
                 pass
+        return
+    raise OSError("Automatic login is not supported on this platform")
 
 
 def already_running():
-    """Evita dos VitaMon a la vez (mandarían cada dato dos veces)."""
-    if sys.platform != "win32":
+    """Prevent two senders from broadcasting duplicate telemetry."""
+    if sys.platform == "win32":
+        import ctypes
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        already_running.handle = k32.CreateMutexW(None, False, "Local\\VitaMonServer")
+        return ctypes.get_last_error() == 183
+    if sys.platform.startswith("linux"):
+        import fcntl
+        lock_dir = os.environ.get("XDG_RUNTIME_DIR") or os.path.join(
+            os.path.expanduser("~"), ".cache", "vitamon"
+        )
+        os.makedirs(lock_dir, exist_ok=True)
+        handle = open(os.path.join(lock_dir, "vitamon.lock"), "w", encoding="utf-8")
+        try:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            handle.close()
+            return True
+        already_running.handle = handle
         return False
-    import ctypes
-    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    already_running.handle = k32.CreateMutexW(None, False, "Local\\VitaMonServer")
-    return ctypes.get_last_error() == 183  # ERROR_ALREADY_EXISTS
+    return False
 
 
 # ---------- Ventana ----------
@@ -149,6 +207,7 @@ class App:
         self.lhm_ok = None
         self.labels = []  # (widget, clave) para retraducir al cambiar de idioma
         self.tray = None  # pystray.Icon mientras la opción de bandeja esté activa
+        self.control_window = None
 
         root.minsize(520, 0)
         self.icon_path = None
@@ -227,7 +286,7 @@ class App:
         self.login_var = tk.BooleanVar(value=get_run_at_login())
         login = ttk.Checkbutton(top, variable=self.login_var, command=self.on_login)
         login.grid(row=5, column=0, columnspan=2, sticky="w", **pad)
-        if sys.platform != "win32":
+        if sys.platform != "win32" and not sys.platform.startswith("linux"):
             login.state(["disabled"])
         self.labels.append((login, "run_at_login"))
         self.tray_var = tk.BooleanVar(value=bool(self.cfg.get("tray")) and pystray is not None)
@@ -282,6 +341,24 @@ class App:
         self.labels.append((lg, "log"))
         self.log_box = tk.Text(lg, height=6, width=60, state="disabled", font=("Consolas", 9), wrap="word")
         self.log_box.pack(fill="both", expand=True)
+
+        self.control_btn = ttk.Button(top, text="Open PC Control Center", command=self.open_control_center)
+        self.control_btn.grid(row=12, column=0, columnspan=2, sticky="ew", padx=10, pady=(2, 8))
+
+    def open_control_center(self):
+        try:
+            from vdn.control_center import open_control_center
+            if self.control_window is not None:
+                try:
+                    if self.control_window.window.winfo_exists():
+                        self.control_window.window.lift()
+                        return
+                except tk.TclError:
+                    pass
+            self.control_window = open_control_center(self.root)
+        except Exception as exc:
+            log_error(f"PC Control Center could not open: {exc!r}")
+            messagebox.showerror(APP_NAME, f"Could not open PC Control Center: {exc}")
 
     # --- textos ---
 

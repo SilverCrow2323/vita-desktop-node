@@ -1,11 +1,14 @@
-name: Build
+name: Build and Package
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/vdn2-foundation]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   tests:
@@ -15,44 +18,81 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - run: pip install -r server/requirements.txt
+      - name: Install host dependencies
+        run: pip install -r server/requirements.txt
+      - name: Python unit tests
+        env:
+          PYTHONPATH: server
+        run: python -m unittest discover -s server/tests/vdn -v
       - name: C tests (protocol + translations)
         working-directory: vita/tests
         run: |
-          gcc -std=c11 -Wall -Wextra -I../src ../src/protocol.c test_protocol.c -o test_protocol -lm && ./test_protocol
-          gcc -std=c11 -Wall -Wextra -I../src ../src/lang.c test_lang.c -o test_lang && ./test_lang
+          gcc -std=c11 -Wall -Wextra -I../src ../src/protocol.c test_protocol.c -o test_protocol -lm
+          ./test_protocol
+          gcc -std=c11 -Wall -Wextra -I../src ../src/lang.c test_lang.c -o test_lang
+          ./test_lang
       - name: Server line through the C parser
         working-directory: server
         run: python test_server_line.py
-      - name: GPU readers with sample LibreHardwareMonitor data (NVIDIA, AMD, Intel)
+      - name: GPU readers with sample LibreHardwareMonitor data
         working-directory: server
         run: python test_gpu.py
       - name: RivaTuner FPS, update check and Vita reply
         working-directory: server
         run: python test_misc.py
-      - name: Release tag matches server/version.py
+      - name: Release tag matches product version
         if: startsWith(github.ref, 'refs/tags/v')
         working-directory: server
         run: |
           expected="v$(python -c 'import version; print(version.APP_VERSION)')"
-          if [ "$expected" != "$GITHUB_REF_NAME" ]; then
-            echo "La etiqueta $GITHUB_REF_NAME no coincide con server/version.py ($expected)"
+          test "$expected" = "$GITHUB_REF_NAME" || {
+            echo "Tag $GITHUB_REF_NAME does not match $expected"
             exit 1
-          fi
+          }
+
+  deb:
+    runs-on: ubuntu-24.04
+    needs: tests
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install Debian packaging tools
+        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
+      - name: Build Debian package
+        run: bash packaging/linux/build-deb.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: VitaDesktopNode-Linux-DEB
+          path: dist/*.deb
+          if-no-files-found: error
+          retention-days: 30
 
   vpk:
     runs-on: ubuntu-24.04
     container: vitasdk/vitasdk:latest
     steps:
       - uses: actions/checkout@v7
-      - name: Build VPK
+      - name: Build Vita Desktop Node VPK
+        working-directory: vita
         run: |
-          cd vita && mkdir -p build && cd build
-          cmake .. && make
+          cmake -S . -B build
+          cmake --build build --parallel 2
+      - name: Verify VPK structure and identity
+        run: python3 vita/tools/verify_vpk.py vita/build/VitaDesktopNode.vpk
+      - name: Prepare verified VPK handoff
+        run: |
+          mkdir -p dist
+          cp vita/build/VitaDesktopNode.vpk dist/VitaDesktopNode-0.1.0-alpha.2.vpk
+          sha256sum dist/VitaDesktopNode-0.1.0-alpha.2.vpk > dist/VitaDesktopNode-0.1.0-alpha.2.vpk.sha256
+          python3 vita/tools/verify_vpk.py dist/VitaDesktopNode-0.1.0-alpha.2.vpk > dist/VitaDesktopNode-0.1.0-alpha.2-build.txt
       - uses: actions/upload-artifact@v7
         with:
-          name: VitaMon.vpk
-          path: vita/build/VitaMon.vpk
+          name: VitaDesktopNode-VPK-alpha.2
+          path: dist/VitaDesktopNode-0.1.0-alpha.2*
+          if-no-files-found: error
+          retention-days: 30
 
   exe:
     runs-on: windows-latest
@@ -61,34 +101,35 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Build VitaMon.exe and VitaMon-windows.zip
+      - name: Build Windows executable and archive
         shell: cmd
-        run: server\build_exe.bat
+        run: server\\build_exe.bat
       - uses: actions/upload-artifact@v7
         with:
-          name: VitaMon.exe
+          name: VitaDesktopNode-Windows-EXE
           path: server/dist/VitaMon.exe
+          if-no-files-found: error
+          retention-days: 30
       - uses: actions/upload-artifact@v7
         with:
-          name: VitaMon-windows.zip
+          name: VitaDesktopNode-Windows-ZIP
           path: server/dist/VitaMon-windows.zip
+          if-no-files-found: error
+          retention-days: 30
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [tests, vpk, exe]
+    needs: [tests, deb, vpk, exe]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
       - uses: actions/download-artifact@v8
         with:
+          path: release-assets
           merge-multiple: true
       - uses: softprops/action-gh-release@v3
         with:
-          files: |
-            VitaMon.vpk
-            VitaMon.exe
-            VitaMon-windows.zip
+          files: release-assets/*
           generate_release_notes: true
-          # etiquetas como v1.2.0-beta.1 se publican como beta (pre-release)
           prerelease: ${{ contains(github.ref_name, '-') }}

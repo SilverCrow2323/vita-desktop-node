@@ -241,7 +241,7 @@ static void draw_header(const AppState *st)
     SceDateTime now;
     int tx;
 
-    text(16, 30, C_TEXT, 1.1f, st->stats.host[0] ? st->stats.host : "VitaMon");
+    text(16, 30, C_TEXT, 1.1f, st->stats.host[0] ? st->stats.host : "Vita Desktop Node");
 
     sceRtcGetCurrentClockLocalTime(&now);
     snprintf(b, sizeof(b), "%02d:%02d", now.hour, now.minute);

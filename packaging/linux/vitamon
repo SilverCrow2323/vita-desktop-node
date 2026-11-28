@@ -1,0 +1,3 @@
+#!/bin/sh
+export PYTHONPATH="/usr/lib/vitamon${PYTHONPATH:+:$PYTHONPATH}"
+exec /usr/bin/python3 /usr/lib/vitamon/vitamon_gui.py "$@"

@@ -28,7 +28,7 @@
 #define IDLE_SLEEP_US 300000000ULL
 #define TOAST_US 2000000ULL
 
-#define VMON_APP_VERSION "1.3"
+#define VMON_APP_VERSION "0.1.0-alpha.2"
 #define ACK_EVERY_US 1000000ULL   /* respuesta al PC: como mucho 1 por segundo */
 #define BATT_EVERY_US 10000000ULL /* la batería cambia despacio: leerla cada 10 s */
 
