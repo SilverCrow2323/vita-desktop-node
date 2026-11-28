@@ -312,19 +312,39 @@ def fmt(v):
     return "-1" if v is None or v < 0 else f"{v:.1f}"
 
 
+def _protocol_token(value, limit=40):
+    """Keep text fields printable ASCII and prevent delimiter/control injection."""
+    text = str(value or "")
+    safe = "".join(
+        char if 32 <= ord(char) < 127 and char not in ";=" else "-"
+        for char in text
+    )
+    return safe[:limit]
+
+
+MAX_PROTOCOL_BYTES = 1024
+
+
 def build_line(s):
-    cores = ",".join(str(round(c)) for c in s["cores"])
-    parts = [f"host={s['host']}", f"cpun={s.get('cpun', '')}", f"gpun={s.get('gpun', '')}",
+    cores = ",".join(str(round(c)) for c in s["cores"][:256])
+    parts = [f"host={_protocol_token(s['host'], 60)}",
+             f"cpun={_protocol_token(s.get('cpun', ''), 40)}",
+             f"gpun={_protocol_token(s.get('gpun', ''), 40)}",
              f"cpu={fmt(s['cpu'])}", f"cores={cores}"]
     for k in ("ctemp", "ram", "ramu", "ramt", "gpu", "gtemp", "vramu", "vramt", "gclk", "up", "down", "disk"):
         parts.append(f"{k}={fmt(s[k])}")
     parts.append(f"fps={fmt(s.get('fps', NA))}")
     parts.append(f"ts={s['ts']}")
-    return "VMON1;" + ";".join(parts)
+    line = "VMON1;" + ";".join(parts)
+    if len(line.encode("ascii")) > MAX_PROTOCOL_BYTES:
+        raise ValueError("VitaMon protocol line exceeds the 1024-byte limit")
+    return line
 
 
 def parse_ack(data, ip):
     """Respuesta de la Vita -> {'ip', 'ver', 'batt' (-1 si no hay), 'chg' (bool), 't'}; None si no lo es."""
+    if not isinstance(data, (bytes, bytearray)) or len(data) > 512:
+        return None
     try:
         text = data.decode("ascii").strip()
     except UnicodeDecodeError:
@@ -334,9 +354,11 @@ def parse_ack(data, ip):
     fields = dict(p.split("=", 1) for p in text[9:].split(";") if "=" in p)
     try:
         batt = int(fields.get("batt", -1))
-    except ValueError:
+    except (TypeError, ValueError):
         batt = -1
-    return {"ip": ip, "ver": fields.get("ver", "")[:16], "batt": batt,
+    if not 0 <= batt <= 100:
+        batt = -1
+    return {"ip": ip, "ver": _protocol_token(fields.get("ver", ""), 16), "batt": batt,
             "chg": fields.get("chg") == "1", "t": time.monotonic()}
 
 
