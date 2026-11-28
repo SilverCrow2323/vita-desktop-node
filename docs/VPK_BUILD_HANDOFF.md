@@ -52,3 +52,8 @@ This is a development VPK artifact, not a published GitHub Release and not a har
 - [Build and Package #46128618834](https://github.com/SilverCrow2323/vita-desktop-node/actions/runs/46128618834) and [#46128616457](https://github.com/SilverCrow2323/vita-desktop-node/actions/runs/46128616457) passed on `e545682`.
 - Verified outputs: Vita VPK build and structure/identity checks, host Python/C protocol/translation/parser tests, Windows executable/ZIP and Debian package builds. Release publication was skipped because this is not a tag build.
 - The Vita-side VDN2/TLS pairing client, automatic listener lifecycle and physical console validation remain unimplemented or unverified as described in the PR.
+
+## Release readiness verification — 2026-11-28
+
+- Workflow evidence: https://github.com/SilverCrow2323/vita-desktop-node/actions/runs/46180479508.
+- Windows EXE, Vita VPK, host tests and Debian package jobs passed. The release job was skipped. This verifies packaging/build outputs only; VDN2 pairing and live Vita-to-host sync still require device tests.
